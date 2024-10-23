@@ -1,5 +1,5 @@
 import { Avatar } from "@/components/ui/avatar";
-import { BACK_END } from "@/constant/domain";
+import { BACK_END, NG_HEADER } from "@/constant/domain";
 import axios, { AxiosResponse } from "axios";
 import { getCookie, setCookie } from "typescript-cookie";
 import { ToastContainer, toast } from "react-toastify";
@@ -34,6 +34,7 @@ class UserService {
         .post(`${this.baseUrl}/register`, data, {
           headers: {
             "Content-Type": "application/json",
+            ...NG_HEADER,
           },
         })
         .then((response) => {
@@ -53,7 +54,12 @@ class UserService {
   public async login(account: Account): Promise<string> {
     try {
       const response: AxiosResponse<{ token: string }> = await axios
-        .post(`${this.baseUrl}/login`, account)
+        .post(`${this.baseUrl}/login`, account, {
+          headers: {
+            "Content-Type": "application/json",
+            ...NG_HEADER,
+          },
+        })
         .then((response) => {
           setCookie("user", JSON.stringify(response.data.user), { expires: 1 });
           localStorage.setItem("token", response.data.token);
@@ -79,6 +85,7 @@ class UserService {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -102,6 +109,7 @@ class UserService {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -120,6 +128,7 @@ class UserService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -136,6 +145,7 @@ class UserService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
           responseType: "blob",
         }
@@ -151,6 +161,7 @@ class UserService {
       await axios.post(`${this.baseUrl}/logout`, null, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          ...NG_HEADER,
         },
       });
       localStorage.removeItem("token");
@@ -169,6 +180,7 @@ class UserService {
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              ...NG_HEADER,
             },
           }
         )
@@ -185,7 +197,12 @@ class UserService {
   public async getUserById(userId: number): Promise<User> {
     try {
       const response: AxiosResponse<User> = await axios.get(
-        `${this.baseUrl}/${userId}`
+        `${this.baseUrl}/${userId}`,
+        {
+          headers: {
+            ...NG_HEADER,
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -197,7 +214,7 @@ class UserService {
     try {
       const response: AxiosResponse<User[]> = await axios.get(
         `${this.baseUrl}/friends/${userId}`,
-        { params: pageable }
+        { params: pageable, headers: { ...NG_HEADER } }
       );
       console.log(response);
       return response.data;
@@ -212,7 +229,10 @@ class UserService {
       const response: AxiosResponse<User[]> = await axios.get(
         `${this.baseUrl}/friendsRequest`,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
+          },
         }
       );
 
@@ -232,6 +252,7 @@ class UserService {
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              ...NG_HEADER,
             },
           }
         )
@@ -255,6 +276,7 @@ class UserService {
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              ...NG_HEADER,
             },
           }
         )
@@ -275,7 +297,10 @@ class UserService {
         `${this.baseUrl}/search`,
         {
           params: { name: search },
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
+          },
         }
       );
       return response.data;

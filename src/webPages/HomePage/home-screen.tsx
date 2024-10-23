@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
-import { BACK_END, BE_IP } from "@/constant/domain";
+import { BACK_END } from "@/constant/domain";
 import { DateUtil } from "@/service/DateUtil";
 import { Separator } from "@/components/ui/separator";
 import { getCookie, setCookie } from "typescript-cookie";

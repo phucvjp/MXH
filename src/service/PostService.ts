@@ -1,4 +1,4 @@
-import { BACK_END } from "@/constant/domain";
+import { BACK_END, NG_HEADER } from "@/constant/domain";
 import axios, { AxiosResponse } from "axios";
 import { Attachment } from "./AttachmentService";
 import { User } from "./UserService";
@@ -32,6 +32,7 @@ class PostService {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -44,7 +45,12 @@ class PostService {
   public async getPostsByUser(userId: number): Promise<Post[]> {
     try {
       const response: AxiosResponse<Post[]> = await axios.get(
-        `${this.baseUrl}/user/${userId}`
+        `${this.baseUrl}/user/${userId}`,
+        {
+          headers: {
+            ...NG_HEADER,
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -59,6 +65,7 @@ class PostService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -75,11 +82,12 @@ class PostService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
           params: page,
         }
       );
-      console.log(response)
+      console.log(response);
       return response.data;
     } catch (error) {
       throw new Error("Failed to fetch posts");

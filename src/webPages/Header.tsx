@@ -1,19 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { BACK_END, BE_IP } from "@/constant/domain";
+import { BACK_END, WS_BACK_END } from "@/constant/domain";
 import UserService, { User } from "@/service/UserService";
 import { Client, IMessage } from "@stomp/stompjs";
 import { useQuery } from "@tanstack/react-query";
-import { set } from "date-fns";
-import { get } from "http";
+
 import { Bell, Menu, Search, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +36,7 @@ export const Header = ({ ...props }) => {
     if (data) {
       setUser(data);
       const newClient = new Client({
-        brokerURL: `ws://${BE_IP}:8080/message`,
+        brokerURL: `${WS_BACK_END}/message`,
         onConnect: () => {
           newClient.subscribe(
             "/topic/private/" + data.email,

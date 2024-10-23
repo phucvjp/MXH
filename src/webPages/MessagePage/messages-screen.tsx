@@ -26,7 +26,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import UserService, { User } from "@/service/UserService";
 import { useForm } from "react-hook-form";
 import GroupService, { Group } from "@/service/GroupService";
-import { BACK_END, BE_IP } from "@/constant/domain";
+import { BACK_END, WS_BACK_END } from "@/constant/domain";
 import { getCookie, removeCookie, setCookie } from "typescript-cookie";
 import ChatService, { Message } from "@/service/ChatService";
 import { AddUser } from "./addUser";
@@ -240,7 +240,7 @@ export function MessagesScreen() {
           continue;
         }
         const newClient = new Client({
-          brokerURL: `ws://${BE_IP}:8080/message`,
+          brokerURL: `${WS_BACK_END}/message`,
           onConnect: () => {
             newClient.subscribe(
               "/topic/public/" + currentGroup?.groupId,
@@ -571,10 +571,10 @@ export function MessagesScreen() {
                         <AvatarImage
                           src={
                             group?.avatar
-                              ? `http://${BE_IP}:8080/attachment/${group?.avatar}`
+                              ? `${BACK_END}/attachment/${group?.avatar}`
                               : group.type === "GROUP"
                               ? `/placeholder-avatar-${group.groupId}.png`
-                              : `http://${BE_IP}:8080/attachment/${
+                              : `${BACK_END}/attachment/${
                                   group.users?.filter((user1) => {
                                     return user1.userId !== user?.userId;
                                   })[0]?.avatar || ""
@@ -655,10 +655,10 @@ export function MessagesScreen() {
                 <AvatarImage
                   src={
                     currentGroupRef.current?.avatar
-                      ? `http://${BE_IP}:8080/attachment/${currentGroupRef.current?.avatar}`
+                      ? `${BACK_END}/attachment/${currentGroupRef.current?.avatar}`
                       : currentGroupRef.current?.type === "GROUP"
                       ? `/placeholder-avatar-${currentGroupRef.current?.avatar}.png`
-                      : `http://${BE_IP}:8080/attachment/${
+                      : `${BACK_END}/attachment/${
                           currentGroupRef.current?.users?.filter((user1) => {
                             return user1.userId !== user?.userId;
                           })[0]?.avatar || ""
@@ -741,7 +741,7 @@ export function MessagesScreen() {
                               >
                                 {!msg?.user?.avatar ? null : (
                                   <AvatarImage
-                                    src={`http://${BE_IP}:8080/attachment/${msg?.user?.avatar}`}
+                                    src={`${BACK_END}/attachment/${msg?.user?.avatar}`}
                                     alt={msg?.user?.firstName}
                                   />
                                 )}
@@ -783,13 +783,13 @@ export function MessagesScreen() {
                                 {msg?.attachments?.map((attachment, index) => (
                                   <div key={index} className="flex m-1">
                                     <LazyLoadImage
-                                      src={`http://${BE_IP}:8080/attachment/${attachment.name}`}
+                                      src={`${BACK_END}/attachment/${attachment.name}`}
                                       alt={`${attachment.name}`}
                                       className="h-28 w-28 object-cover rounded-lg hover:cursor-pointer"
                                       loading="lazy"
                                       onClick={() => {
                                         window.open(
-                                          `http://${BE_IP}:8080/attachment/${attachment.name}`
+                                          `${BACK_END}/attachment/${attachment.name}`
                                         );
                                       }}
                                     />
@@ -921,7 +921,7 @@ export function MessagesScreen() {
                           (member?.lastName || "").slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                       <AvatarImage
-                        src={`http://${BE_IP}:8080/attachment/${member?.avatar}`}
+                        src={`${BACK_END}/attachment/${member?.avatar}`}
                         alt={member?.firstName}
                       />
                     </Avatar>
@@ -950,13 +950,13 @@ export function MessagesScreen() {
                     return (
                       <div key={index} className="flex m-1">
                         <LazyLoadImage
-                          src={`http://${BE_IP}:8080/attachment/${attachment}`}
+                          src={`${BACK_END}/attachment/${attachment}`}
                           alt={`${attachment}`}
                           className="h-16 w-16 object-cover rounded-lg hover:cursor-pointer fle"
                           loading="lazy"
                           onClick={() => {
                             window.open(
-                              `http://${BE_IP}:8080/attachment/${attachment}`
+                              `${BACK_END}/attachment/${attachment}`
                             );
                           }}
                         />

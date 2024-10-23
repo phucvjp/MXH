@@ -1,4 +1,4 @@
-import { BACK_END } from "@/constant/domain";
+import { BACK_END, NG_HEADER } from "@/constant/domain";
 import axios, { AxiosResponse } from "axios";
 import { User } from "./UserService";
 import { Message } from "./ChatService";
@@ -27,6 +27,7 @@ export const fetchAllGroup = async () => {
     .get(`${BACK_END}/group/`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
+        ...NG_HEADER,
       },
     })
     .catch((err) => {
@@ -45,6 +46,7 @@ class GroupService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -63,6 +65,7 @@ class GroupService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -71,7 +74,7 @@ class GroupService {
       throw new Error("Failed to create group");
     }
   }
-  public async createChat(group: Group,userId:number): Promise<Group> {
+  public async createChat(group: Group, userId: number): Promise<Group> {
     try {
       const response: AxiosResponse<Group> = await axios.post(
         `${this.baseUrl}/create/${userId}`,
@@ -79,6 +82,7 @@ class GroupService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
@@ -98,6 +102,7 @@ class GroupService {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
           },
         }
       );
