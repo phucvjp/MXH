@@ -1,4 +1,4 @@
-import { HdmiPort, Loader2, LoaderPinwheel, LucideAlignHorizontalDistributeCenter, LucideGavel, LucideLoader } from 'lucide-react';
+import { LucideLoader } from 'lucide-react';
 const messages = [
   'Please wait...',
   'The quick brown fox jumps over the lazy dog.',

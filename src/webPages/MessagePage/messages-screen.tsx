@@ -15,8 +15,6 @@ import {
   Crown,
   LogOut,
   LogOutIcon,
-  Bell,
-  Menu,
   Star,
 } from "lucide-react";
 import { Client, IMessage } from "@stomp/stompjs";
@@ -44,7 +42,7 @@ interface ClientProps {
   client: Client;
   group: Group;
 }
-import { number, z } from "zod";
+import {  z } from "zod";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import AttachmentService from "@/service/AttachmentService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -59,7 +57,6 @@ import {
 } from "@/components/ui/tooltip";
 import { DateUtil } from "@/service/DateUtil";
 import { ConfirmChat } from "./confirmChat";
-import { set } from "date-fns";
 const formSchema = z.object({
   token: z.string(),
   content: z.string(),
@@ -470,7 +467,7 @@ export function MessagesScreen() {
     setMaxPage(2);
   };
 
-  const handleLoadMessages = (e?: any) => {
+  const handleLoadMessages = () => {
     if (
       messagePage >= maxPage ||
       currentGroupRef.current?.numberOfMessages ==
@@ -708,7 +705,7 @@ export function MessagesScreen() {
             className="flex-1 p-4"
             ref={scrollAreaRef}
             onScrollCapture={(e) => {
-              if (e.target.scrollTop === 0) {
+              if ((e.target as HTMLDivElement).scrollTop === 0) {
                 console.log("fetching more messages");
                 handleLoadMessages();
               }
@@ -842,7 +839,7 @@ export function MessagesScreen() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => <DropzoneComponent control={form.control} {...field} />}
                       />
                     </ScrollArea>
                     <div className="flex items-center">

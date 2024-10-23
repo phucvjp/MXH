@@ -37,7 +37,7 @@ export const BGChange = ({ ...props }) => {
           setBGPreview(`${BACK_END}/attachment/${res?.name}`);
         }
       })
-      .catch((error) => {
+      .catch(() => {
         toast.error("Failed to upload bG");
       });
   };

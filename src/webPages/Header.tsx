@@ -175,9 +175,12 @@ export const Header = ({ ...props }) => {
                 }}
                 value={input}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && e.target.value) {
-                    handleSearch(e.target.value);
-                  } else if (!e.target.value) {
+                  if (
+                    e.key === "Enter" &&
+                    (e.target as HTMLInputElement).value
+                  ) {
+                    handleSearch((e.target as HTMLInputElement).value);
+                  } else if (!(e.target as HTMLInputElement).value) {
                     setSearchUsers([]);
                   }
                 }}

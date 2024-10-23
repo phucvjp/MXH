@@ -1,41 +1,20 @@
 import { useEffect, useState } from "react";
 import {
-  Bell,
   Home,
-  Menu,
   MessageCircle,
-  Moon,
-  Search,
-  Sun,
   UserIcon,
   Users,
-  Share,
   ThumbsUp,
-  Star,
   Paperclip,
   MoreHorizontal,
   Share2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import UserService, { User } from "@/service/UserService";
 import { useNavigate } from "react-router-dom";
-import { Client, IMessage } from "@stomp/stompjs";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
 import PostService, { Post } from "@/service/PostService";
@@ -68,7 +47,7 @@ export default function HomeScreen() {
   const [user, setUser] = useState<User>();
   const [friendReqs, setFriendReqs] = useState<User[]>([]);
   const token = localStorage.getItem("token");
-  const [friendReqPage, setFriendReqPage] = useState(1);
+  // const [friendReqPage, setFriendReqPage] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
 
@@ -89,7 +68,7 @@ export default function HomeScreen() {
     console.log(data);
     if (data) {
       setUser(data);
-      UserService.getFriendReqs(data.userId).then((data) => {
+      UserService.getFriendReqs().then((data) => {
         setFriendReqs(data);
       });
       PostService.getRelatedPosts({ size: 60 }).then((res) =>
@@ -217,7 +196,12 @@ export default function HomeScreen() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex justify-between">

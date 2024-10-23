@@ -1,12 +1,11 @@
-import { Avatar } from "@/components/ui/avatar";
 import { BACK_END, NG_HEADER } from "@/constant/domain";
 import axios, { AxiosResponse } from "axios";
-import { getCookie, setCookie } from "typescript-cookie";
-import { ToastContainer, toast } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
-import { set } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+
 import { Attachment } from "./AttachmentService";
+import { toast } from "react-toastify";
+import { setCookie } from "typescript-cookie";
 
 export interface User {
   userId: number;
@@ -46,7 +45,11 @@ class UserService {
         });
       return response.data.response;
     } catch (error) {
-      toast.error("Failed to register: " + error?.response?.data?.response);
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        toast.error("Failed to register: " + error.response.data.response);
+      } else {
+        toast.error("Failed to register");
+      }
       throw new Error("Failed to register");
     }
   }
@@ -68,8 +71,16 @@ class UserService {
         });
       return response.data.token;
     } catch (error) {
-      toast.error(error?.response?.data?.response);
-      throw new Error(error?.response?.data?.response);
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        toast.error(error.response.data.response);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      throw new Error(
+        axios.isAxiosError(error) && error.response
+          ? error.response.data.response
+          : "An unexpected error occurred"
+      );
     }
   }
 
@@ -206,25 +217,33 @@ class UserService {
       );
       return response.data;
     } catch (error) {
-      toast.error(error?.response?.data?.response);
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        toast.error(error.response.data.response);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
       throw new Error("Failed to fetch user info");
     }
   }
-  public async getFriends(userId: number, pageable: any): Promise<User[]> {
+  public async getFriends(userId: number, pageable: any): Promise<any> {
     try {
-      const response: AxiosResponse<User[]> = await axios.get(
+      const response: AxiosResponse<any> = await axios.get(
         `${this.baseUrl}/friends/${userId}`,
         { params: pageable, headers: { ...NG_HEADER } }
       );
       console.log(response);
       return response.data;
     } catch (error) {
-      toast.error(error?.response?.data?.response);
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        toast.error(error.response.data.response);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
       throw new Error("Failed to fetch user info");
     }
   }
 
-  public async getFriendReqs(userId: number): Promise<User[]> {
+  public async getFriendReqs(): Promise<User[]> {
     try {
       const response: AxiosResponse<User[]> = await axios.get(
         `${this.baseUrl}/friendsRequest`,
@@ -238,7 +257,11 @@ class UserService {
 
       return response.data;
     } catch (error) {
-      toast.error(error?.response?.data?.response);
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        toast.error(error.response.data.response);
+      } else {
+        toast.error("Failed to fetch user info");
+      }
       throw new Error("Failed to fetch user info");
     }
   }
@@ -262,7 +285,11 @@ class UserService {
         });
     } catch (error) {
       console.log(error);
-      toast.error(error?.response?.data);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
       throw new Error("Failed to add friend");
     }
   }
@@ -286,7 +313,11 @@ class UserService {
         });
     } catch (error) {
       console.log(error);
-      toast.error(error?.response?.data);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
       throw new Error("Failed to decline friend request");
     }
   }
@@ -305,7 +336,11 @@ class UserService {
       );
       return response.data;
     } catch (e) {
-      toast.error(e?.response?.data);
+      if (axios.isAxiosError(e) && e.response) {
+        toast.error(e.response.data);
+      } else {
+        toast.error("Failed to search user");
+      }
       throw new Error("Failed to search user");
     }
   }

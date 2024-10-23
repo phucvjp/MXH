@@ -14,11 +14,11 @@ export interface Post {
   comments: any[];
 }
 
-interface PostModel {
-  title: string;
-  content: string;
-  attachments: File[];
-}
+// interface PostModel {
+//   title: string;
+//   content: string;
+//   attachments: File[];
+// }
 
 class PostService {
   private baseUrl: string = BACK_END + "/post";

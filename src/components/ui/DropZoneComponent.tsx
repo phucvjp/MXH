@@ -2,10 +2,18 @@ import { UploadCloudIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Controller } from "react-hook-form";
-import { Button } from "./button";
 
 interface AcceptedFile extends File {
   preview: string;
+}
+
+import { Control } from "react-hook-form"; // Add this import
+
+interface DropzoneComponentProps {
+  control: Control<any>;
+  name: string;
+  maxFiles?: number;
+  fieldMessage?: string;
 }
 
 export default function DropzoneComponent({
@@ -13,7 +21,7 @@ export default function DropzoneComponent({
   name,
   maxFiles = 5,
   fieldMessage = "Drag 'n' drop some images here, or click to select images",
-}) {
+}: DropzoneComponentProps) {
   return (
     <Controller
       control={control}
@@ -33,7 +41,7 @@ export default function DropzoneComponent({
             ]);
           },
         });
-        const removeFile = (fileToRemove) => {
+        const removeFile = (fileToRemove: AcceptedFile) => {
           setAcceptedFiles((prevFiles) =>
             prevFiles.filter((file) => file !== fileToRemove)
           );
@@ -44,9 +52,9 @@ export default function DropzoneComponent({
           onChange(acceptedFiles);
         }, [acceptedFiles]);
 
-        const acceptedFileItems = acceptedFiles.map((file, index) => (
+        const acceptedFileItems = acceptedFiles.map((file) => (
           <div
-            key={`${file.path}-${file.lastModified}`}
+            key={`${file.name}-${file.lastModified}`}
             className="flex flex-row gap-2 w-full justify-between relative m-1"
           >
             {/* Display image preview */}

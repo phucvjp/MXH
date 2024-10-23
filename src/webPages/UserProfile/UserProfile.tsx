@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -19,10 +17,8 @@ import {
   UserPlus,
   MoreHorizontal,
   Paperclip,
-  CameraIcon,
-  Loader2,
 } from "lucide-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCookie } from "typescript-cookie";
 import PostService, { Post } from "@/service/PostService";
@@ -42,7 +38,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { Input } from "@/components/ui/input";
-import { set } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { AvatarChange } from "./AvatarChange";
 import { BGChange } from "./BGChange";
@@ -339,7 +334,7 @@ export default function UserProfile() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => <DropzoneComponent control={form.control} {...field} />}
                       />
                     </ScrollArea>
                     <div className="flex justify-between">
