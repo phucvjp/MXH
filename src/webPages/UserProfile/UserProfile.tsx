@@ -7,10 +7,7 @@ import GroupService from "@/service/GroupService";
 import UserService, { User } from "@/service/UserService";
 import {
   MessageCircle,
-  ThumbsUp,
-  Share2,
   UserPlus,
-  MoreHorizontal,
   Paperclip,
 } from "lucide-react";
 import { useEffect, useState } from "react";

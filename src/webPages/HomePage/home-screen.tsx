@@ -4,10 +4,7 @@ import {
   MessageCircle,
   UserIcon,
   Users,
-  ThumbsUp,
   Paperclip,
-  MoreHorizontal,
-  Share2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
 import PostService, { Post } from "@/service/PostService";
-import { toast } from "react-toastify";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,8 +28,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { BACK_END } from "@/constant/domain";
-import { DateUtil } from "@/service/DateUtil";
-import { Separator } from "@/components/ui/separator";
 import { getCookie, setCookie } from "typescript-cookie";
 import { PostCard } from "../PostCard";
 
