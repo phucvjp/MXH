@@ -52,9 +52,9 @@ export default function DropzoneComponent({
           onChange(acceptedFiles);
         }, [acceptedFiles]);
 
-        const acceptedFileItems = acceptedFiles.map((file) => (
+        const acceptedFileItems = acceptedFiles.map((file, i) => (
           <div
-            key={`${file.name}-${file.lastModified}`}
+            key={i}
             className="flex flex-row gap-2 w-full justify-between relative m-1"
           >
             {/* Display image preview */}

@@ -1,11 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BACK_END } from "@/constant/domain";
 import GroupService from "@/service/GroupService";
@@ -18,13 +13,12 @@ import {
   MoreHorizontal,
   Paperclip,
 } from "lucide-react";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCookie } from "typescript-cookie";
 import PostService, { Post } from "@/service/PostService";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
-import { DateUtil } from "@/service/DateUtil";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,10 +32,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { AvatarChange } from "./AvatarChange";
 import { BGChange } from "./BGChange";
 import { toast } from "react-toastify";
+import { PostCard } from "../PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -263,7 +257,7 @@ export default function UserProfile() {
                         }}
                       >
                         <AvatarImage
-                          src={`${BACK_END}/attachment/${friend.avatar}`}
+                          src={friend.avatar?`${BACK_END}/attachment/${friend.avatar}`:""}
                         />
                         <AvatarFallback>
                           {friend.firstName || ""}
@@ -334,7 +328,12 @@ export default function UserProfile() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent control={form.control} {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex justify-between">
@@ -359,112 +358,13 @@ export default function UserProfile() {
               <TabsTrigger value="friends">Friends</TabsTrigger>
             </TabsList>
             <TabsContent value="posts">
-              {posts.map((post, i) => (
-                <Card key={i} className="mb-4">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={`${BACK_END}/attachment/${post.user?.avatar}`}
-                          />
-                          <AvatarFallback>{profile?.firstName}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold">
-                            {profile?.firstName + " " + profile?.lastName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new DateUtil(post.postDate).formatPostTime()}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {post.title && (
-                      <h3 className="font-semibold text-2xl">{post.title}</h3>
-                    )}
-                    <p>{post.content || ""}</p>
-                    {/* attachment */}
-                    <div
-                      className={`grid gap-2 mt-4 grid-cols-${
-                        post?.attachments?.length > 3
-                          ? "3"
-                          : post?.attachments?.length
-                      }`}
-                    >
-                      {post?.attachments?.map((attachment, i) => (
-                        <img
-                          key={i}
-                          src={`${BACK_END}/attachment/${attachment.name}`}
-                          alt="Post"
-                          className="rounded-md w-full"
-                        />
-                      ))}
-                    </div>
-                    <div className="flex">
-                      <div className="flex">
-                        {post?.likes?.length > 0 && (
-                          <>
-                            <ThumbsUp
-                              strokeWidth={"2px"}
-                              fillOpacity={"15%"}
-                              fill="green"
-                              className="mr-2 p-0.5 h-5 w-5 text-white bg-lime-300 rounded-full"
-                            />{" "}
-                            {post?.likes?.length}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <Separator className="mt-4" />
-                    <div className="flex justify-between items-center mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (!user) {
-                            toast.error("Please login to like post");
-                            return;
-                          }
-
-                          PostService.likePost(post.post_id).then((data) => {
-                            console.log(data);
-                            setPosts((prev) =>
-                              prev.map((p) =>
-                                p.post_id === post.post_id ? data : p
-                              )
-                            );
-                          });
-                        }}
-                      >
-                        <ThumbsUp
-                          strokeWidth={"1px"}
-                          className="mr-2 h-4 w-4"
-                          fill={`${
-                            post.likes.filter(
-                              (like) => like.userId === user?.userId
-                            ).length > 0
-                              ? "green"
-                              : "none"
-                          }`}
-                          fillOpacity={"45%"}
-                        />
-                        Like
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MessageCircle className="mr-2 h-4 w-4" /> Comment
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Share2 className="mr-2 h-4 w-4" /> Share
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+              {posts?.map((post, i) => (
+                <PostCard
+                  i={i}
+                  post={post}
+                  setPosts={setPosts}
+                  user={user}
+                ></PostCard>
               ))}
             </TabsContent>
             <TabsContent value="about">
@@ -492,7 +392,7 @@ export default function UserProfile() {
                       <div key={i} className="text-center">
                         <Avatar className="mx-auto mb-2 h-20 w-20">
                           <AvatarImage
-                            src={`${BACK_END}/attachment/${friend.avatar}`}
+                            src={friend.avatar?`${BACK_END}/attachment/${friend.avatar}`:""}
                           />
                           <AvatarFallback>{friend.firstName}</AvatarFallback>
                         </Avatar>
@@ -516,7 +416,7 @@ export default function UserProfile() {
                     <Button
                       className="col-span-full"
                       onClick={() => {
-                        if (friendPage >= maxPage-1) {
+                        if (friendPage >= maxPage - 1) {
                           toast.error("No more friends to show");
                           return;
                         }

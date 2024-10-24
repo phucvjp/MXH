@@ -42,7 +42,7 @@ interface ClientProps {
   client: Client;
   group: Group;
 }
-import {  z } from "zod";
+import { z } from "zod";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import AttachmentService from "@/service/AttachmentService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -498,6 +498,7 @@ export function MessagesScreen() {
   };
 
   const handleViewPro = (userId: number) => {
+    if (userId === 0) return;
     nav(`/profile/${userId}`);
   };
 
@@ -564,7 +565,17 @@ export function MessagesScreen() {
                         handleChangeGroup(group);
                       }}
                     >
-                      <Avatar className="h-12 w-12">
+                      <Avatar
+                        className="h-12 w-12"
+                        onClick={() => {
+                          group.type !== "GROUP" &&
+                            handleViewPro(
+                              group.users?.filter((user1) => {
+                                return user1.userId !== user?.userId;
+                              })[0].userId || 0
+                            );
+                        }}
+                      >
                         <AvatarImage
                           src={
                             group?.avatar
@@ -648,7 +659,17 @@ export function MessagesScreen() {
         <div className="flex-1 flex flex-col w-1/2 ">
           <div className="bg-white p-4 flex items-center justify-between border-b">
             <div className="flex items-center">
-              <Avatar className="h-12 w-12">
+              <Avatar
+                className="h-12 w-12"
+                onClick={() => {
+                  currentGroupRef.current?.type !== "GROUP" &&
+                    handleViewPro(
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0].userId || 0
+                    );
+                }}
+              >
                 <AvatarImage
                   src={
                     currentGroupRef.current?.avatar
@@ -839,7 +860,12 @@ export function MessagesScreen() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent control={form.control} {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex items-center">
@@ -918,7 +944,11 @@ export function MessagesScreen() {
                           (member?.lastName || "").slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                       <AvatarImage
-                        src={`${BACK_END}/attachment/${member?.avatar}`}
+                        src={
+                          member?.avatar
+                            ? `${BACK_END}/attachment/${member?.avatar}`
+                            : ""
+                        }
                         alt={member?.firstName}
                       />
                     </Avatar>
@@ -947,14 +977,16 @@ export function MessagesScreen() {
                     return (
                       <div key={index} className="flex m-1">
                         <LazyLoadImage
-                          src={`${BACK_END}/attachment/${attachment}`}
+                          src={
+                            attachment
+                              ? `${BACK_END}/attachment/${attachment}`
+                              : ""
+                          }
                           alt={`${attachment}`}
                           className="h-16 w-16 object-cover rounded-lg hover:cursor-pointer fle"
                           loading="lazy"
                           onClick={() => {
-                            window.open(
-                              `${BACK_END}/attachment/${attachment}`
-                            );
+                            window.open(`${BACK_END}/attachment/${attachment}`);
                           }}
                         />
                       </div>

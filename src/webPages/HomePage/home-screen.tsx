@@ -35,6 +35,7 @@ import { BACK_END } from "@/constant/domain";
 import { DateUtil } from "@/service/DateUtil";
 import { Separator } from "@/components/ui/separator";
 import { getCookie, setCookie } from "typescript-cookie";
+import { PostCard } from "../PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -220,111 +221,12 @@ export default function HomeScreen() {
 
             {/* Posts Feed */}
             {posts.map((post, i) => (
-              <Card key={i} className="mb-4">
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage
-                          src={`${BACK_END}/attachment/${post.user?.avatar}`}
-                        />
-                        <AvatarFallback>{post.user?.firstName}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">
-                          {post.user?.firstName + " " + post.user?.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new DateUtil(post.postDate).formatPostTime()}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {post.title && (
-                    <h3 className="font-semibold text-2xl">{post.title}</h3>
-                  )}
-                  <p>{post.content || ""}</p>
-                  {/* attachment */}
-                  <div
-                    className={`grid gap-2 mt-4 grid-cols-${
-                      post?.attachments?.length > 3
-                        ? "3"
-                        : post?.attachments?.length
-                    }`}
-                  >
-                    {post?.attachments?.map((attachment, i) => (
-                      <img
-                        key={i}
-                        src={`${BACK_END}/attachment/${attachment.name}`}
-                        alt="Post"
-                        className="rounded-md w-full"
-                      />
-                    ))}
-                  </div>
-                  <div className="flex">
-                    <div className="flex">
-                      {post?.likes?.length > 0 && (
-                        <>
-                          <ThumbsUp
-                            strokeWidth={"2px"}
-                            fillOpacity={"15%"}
-                            fill="green"
-                            className="mr-2 p-0.5 h-5 w-5 text-white bg-lime-300 rounded-full"
-                          />{" "}
-                          {post?.likes?.length}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <Separator className="mt-4" />
-                  <div className="flex justify-between items-center mt-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (!user) {
-                          toast.error("Please login to like post");
-                          return;
-                        }
-
-                        PostService.likePost(post.post_id).then((data) => {
-                          console.log(data);
-                          setPosts((prev) =>
-                            prev.map((p) =>
-                              p.post_id === post.post_id ? data : p
-                            )
-                          );
-                        });
-                      }}
-                    >
-                      <ThumbsUp
-                        strokeWidth={"1px"}
-                        className="mr-2 h-4 w-4"
-                        fill={`${
-                          post?.likes?.filter(
-                            (like) => like.userId === user?.userId
-                          ).length > 0
-                            ? "green"
-                            : "none"
-                        }`}
-                        fillOpacity={"45%"}
-                      />
-                      Like
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <MessageCircle className="mr-2 h-4 w-4" /> Comment
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Share2 className="mr-2 h-4 w-4" /> Share
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <PostCard
+                i={i}
+                post={post}
+                setPosts={setPosts}
+                user={user}
+              ></PostCard>
             ))}
           </section>
 

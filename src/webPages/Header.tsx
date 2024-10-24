@@ -207,7 +207,7 @@ export const Header = ({ ...props }) => {
                 >
                   <Avatar>
                     <AvatarImage
-                      src={`${BACK_END}/attachment/${user.avatar}`}
+                      src={user?.avatar?`${BACK_END}/attachment/${user?.avatar}`:""}
                       alt="@user"
                     />
                     <AvatarFallback>{user.firstName}</AvatarFallback>
@@ -248,7 +248,7 @@ export const Header = ({ ...props }) => {
                 >
                   <Avatar>
                     <AvatarImage
-                      src={`${BACK_END}/attachment/${user?.avatar}`}
+                      src={user?.avatar?`${BACK_END}/attachment/${user?.avatar}`:""}
                       alt="@user"
                     />
                     <AvatarFallback>{user?.firstName}</AvatarFallback>
