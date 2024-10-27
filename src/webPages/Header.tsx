@@ -21,8 +21,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   Bell,
+  Home,
   LogOut,
   Menu,
+  MessageCircleMore,
+  Network,
   Search,
   Settings,
   Star,
@@ -138,32 +141,43 @@ export const Header = ({ ...props }) => {
           </div>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <div
-              className="transition-colors hover:text-foreground/80 text-foreground/60 hover:cursor-pointer"
+              className="transition-colors hover:text-foreground/80 text-foreground/60 hover:cursor-pointer flex"
               onClick={(e) => {
                 e.preventDefault();
                 nav("/");
               }}
             >
-              Home
+              <Home className="h-4 w-4 mr-2" /> Home
             </div>
             <div
-              className="transition-colors hover:text-foreground/80 text-foreground/60 hover:cursor-pointer"
+              className="transition-colors hover:text-foreground/80 text-foreground/60 hover:cursor-pointer "
               onClick={(e) => {
                 e.preventDefault();
-                nav("/");
+                window.open(`${BACK_END}`);
               }}
             >
-              Network
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="ml-1 flex">
+                      <Network className="h-4 w-4 mr-2" /> Network
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Click here if you got image fetching problems</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="relative hover:cursor-pointer">
               <div
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
+                className="transition-colors hover:text-foreground/80 text-foreground/60 flex"
                 onClick={(e) => {
                   e.preventDefault();
                   nav("/messages");
                 }}
               >
-                Messages
+                <MessageCircleMore className="h-4 w-4 mr-2" /> Messages
               </div>
               {ping && (
                 <div className="w-4 h-4 rounded-full bg-red-500 animate-ping absolute z-50 -top-1 -right-2 " />
