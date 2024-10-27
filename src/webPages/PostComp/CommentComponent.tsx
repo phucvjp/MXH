@@ -98,7 +98,7 @@ export const CommentComponent = ({ ...props }) => {
   );
 
   return (
-    <div className={`${props.class} `}>
+    <div className={`${props.class} flex-1`}>
       <div
         key={props.comment.comment_id}
         className={`flex items-start space-x-4 bg-slate-50 rounded-xl p-3 bg-opacity-70`}
