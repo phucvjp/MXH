@@ -2,6 +2,7 @@ import { BACK_END, NG_HEADER } from "@/constant/domain";
 import axios, { AxiosResponse } from "axios";
 import { Attachment } from "./AttachmentService";
 import { User } from "./UserService";
+import { Comment } from "./CmtService";
 
 export interface Post {
   post_id: number;
@@ -11,7 +12,7 @@ export interface Post {
   attachments: Attachment[];
   user: any;
   likes: User[];
-  comments: any[];
+  comments: Comment[];
 }
 
 // interface PostModel {

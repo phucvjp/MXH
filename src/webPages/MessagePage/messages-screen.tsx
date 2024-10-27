@@ -25,7 +25,7 @@ import UserService, { User } from "@/service/UserService";
 import { useForm } from "react-hook-form";
 import GroupService, { Group } from "@/service/GroupService";
 import { BACK_END, WS_BACK_END } from "@/constant/domain";
-import { getCookie, removeCookie, setCookie } from "typescript-cookie";
+import { getCookie } from "typescript-cookie";
 import ChatService, { Message } from "@/service/ChatService";
 import { AddUser } from "./addUser";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,14 +49,8 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setCurrentGroup, setGroups } from "@/redux/reducers/Group";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DateUtil } from "@/service/DateUtil";
 import { ConfirmChat } from "./confirmChat";
+import { MessageComponent } from "./MessageComponent";
 const formSchema = z.object({
   token: z.string(),
   content: z.string(),
@@ -347,7 +341,7 @@ export function MessagesScreen() {
               currentGroupRef.current?.users?.filter((u) => {
                 return u.userId != message.user.userId;
               }).length === 0
-                ? [...currentGroupRef.current.users, message.user]
+                ? [...currentGroupRef.current?.users, message.user]
                 : [...(currentGroupRef.current?.users || [])],
             messages: [
               ...(currentGroupRef.current?.messages || []),
@@ -644,10 +638,7 @@ export function MessagesScreen() {
           <Button
             className="mx-1 my-1"
             onClick={() => {
-              localStorage.removeItem("token");
-              removeCookie("user");
-              setCookie("user", "", { expires: -1 });
-              nav("/login");
+              UserService.logout();
             }}
           >
             <LogOut className="h-5 w-5 mr-2" />
@@ -735,111 +726,14 @@ export function MessagesScreen() {
             <div className="h-24" hidden={!loadMessage}>
               <LoadingAnimation className="h-auto relative p-4" />
             </div>
-            {currentGroup?.messages?.map((msg, index) => {
-              if (msg?.status === "MESSAGE")
-                return (
-                  <>
-                    <div
-                      key={index}
-                      className={`flex mb-4 items-start  ${
-                        msg?.user?.userId === user?.userId
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      {msg.user.userId === user?.userId ? null : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Avatar
-                                onClick={() => {
-                                  handleViewPro(msg.user.userId);
-                                }}
-                                className="h-8 w-8 mr-2 hover:cursor-pointer"
-                              >
-                                {!msg?.user?.avatar ? null : (
-                                  <AvatarImage
-                                    src={`${BACK_END}/attachment/${msg?.user?.avatar}`}
-                                    alt={msg?.user?.firstName}
-                                  />
-                                )}
-
-                                <AvatarFallback className="bg-white">
-                                  {(msg?.user?.firstName || "")
-                                    .slice(0, 1)
-                                    .toUpperCase() +
-                                    (msg?.user?.lastName || "")
-                                      .slice(0, 1)
-                                      .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {(msg?.user?.firstName || "") +
-                                  " " +
-                                  (msg?.user?.lastName || "")}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      <div
-                        className={`max-w-[65%] rounded-2xl  ${
-                          msg?.user?.userId === user?.userId
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200"
-                        }`}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger className="w-full hover:cursor-default p-2">
-                              <p className="break-words text-left ">
-                                {msg?.content}
-                              </p>
-                              <div className="flex items-center flex-wrap justify-center w-fit">
-                                {msg?.attachments?.map((attachment, index) => (
-                                  <div key={index} className="flex m-1">
-                                    <LazyLoadImage
-                                      src={`${BACK_END}/attachment/${attachment.name}`}
-                                      alt={`${attachment.name}`}
-                                      className="h-28 w-28 object-cover rounded-lg hover:cursor-pointer"
-                                      loading="lazy"
-                                      onClick={() => {
-                                        window.open(
-                                          `${BACK_END}/attachment/${attachment.name}`
-                                        );
-                                      }}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {new DateUtil(msg.updateAt).formatMessageTime()}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  </>
-                );
-              if (msg?.status === "ANNOUNCE")
-                return (
-                  <>
-                    <div className="flex justify-center mb-4">
-                      <p>{new DateUtil(msg.updateAt).formatMessageTime()}</p>
-                    </div>
-                    <div className="flex justify-center mb-4">
-                      <div className="p-2 bg-gray-300 rounded-lg max-w-fit">
-                        <p>{msg?.content}</p>
-                      </div>
-                    </div>
-                  </>
-                );
-            })}
+            {currentGroup?.messages?.map((msg, index) => (
+              <MessageComponent
+                key={index}
+                msg={msg}
+                user={user}
+                handleViewPro={handleViewPro}
+              ></MessageComponent>
+            ))}
           </ScrollArea>
           <div className="bg-white p-4 border-t ">
             <div className="flex items-center">

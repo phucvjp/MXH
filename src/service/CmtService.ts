@@ -11,6 +11,7 @@ export interface Comment {
   user: User;
   postId: number;
   attachments: Attachment[];
+  replies: Comment[];
 }
 
 class CmtService {
@@ -31,7 +32,25 @@ class CmtService {
       );
       return response.data;
     } catch (error) {
-      throw new Error("Failed to upload post");
+      throw new Error("Failed to comment");
+    }
+  }
+  public async replyComment(data: any, cmtId: number): Promise<Comment> {
+    try {
+      const response: AxiosResponse<Comment> = await axios.post(
+        `${this.baseUrl}/reply/${cmtId}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error("Failed to comment");
     }
   }
 }

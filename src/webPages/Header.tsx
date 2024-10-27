@@ -1,5 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -12,7 +19,16 @@ import UserService, { User } from "@/service/UserService";
 import { Client, IMessage } from "@stomp/stompjs";
 import { useQuery } from "@tanstack/react-query";
 
-import { Bell, Menu, Search, Star, X } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  Star,
+  UserIcon,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCookie, setCookie } from "typescript-cookie";
@@ -207,7 +223,11 @@ export const Header = ({ ...props }) => {
                 >
                   <Avatar>
                     <AvatarImage
-                      src={user?.avatar?`${BACK_END}/attachment/${user?.avatar}`:""}
+                      src={
+                        user?.avatar
+                          ? `${BACK_END}/attachment/${user?.avatar}`
+                          : ""
+                      }
                       alt="@user"
                     />
                     <AvatarFallback>{user.firstName}</AvatarFallback>
@@ -236,31 +256,74 @@ export const Header = ({ ...props }) => {
             </Tooltip>
           </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  nav("/profile/" + user?.userId);
+                }}
+              >
+                <Avatar>
+                  <AvatarImage
+                    src={
+                      user?.avatar
+                        ? `${BACK_END}/attachment/${user?.avatar}`
+                        : ""
+                    }
+                    alt="@user"
+                  />
+                  <AvatarFallback>{user?.firstName}</AvatarFallback>
+                </Avatar>
+
+                <span className="sr-only">User menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className=" p-2">
+                <DropdownMenuItem
+                  className="flex flex-col items-start leading-none border-collapse border w-full p-2 rounded-md shadow-lg hover:cursor-pointer hover:bg-slate-50"
                   onClick={() => {
                     nav("/profile/" + user?.userId);
                   }}
                 >
-                  <Avatar>
-                    <AvatarImage
-                      src={user?.avatar?`${BACK_END}/attachment/${user?.avatar}`:""}
-                      alt="@user"
-                    />
-                    <AvatarFallback>{user?.firstName}</AvatarFallback>
-                  </Avatar>
-                  <span className="sr-only">User menu</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>User menu</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                  <p className="font-medium">
+                    {(user?.firstName || "") + " " + (user?.lastName || "")}
+                  </p>
+                  <p className="w-[200px] truncate text-sm text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </DropdownMenuItem>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  nav("/profile/" + user?.userId);
+                }}
+              >
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Bell className="mr-2 h-4 w-4" />
+                <span>Notifications</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  UserService.logout();
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

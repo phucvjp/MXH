@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Home,
-  MessageCircle,
-  UserIcon,
-  Users,
-  Paperclip,
-} from "lucide-react";
+import { Home, MessageCircle, UserIcon, Users, Paperclip } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { BACK_END } from "@/constant/domain";
 import { getCookie, setCookie } from "typescript-cookie";
-import { PostCard } from "../PostCard";
+import { PostCard } from "../PostComp/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -216,6 +210,7 @@ export default function HomeScreen() {
             {/* Posts Feed */}
             {posts.map((post, i) => (
               <PostCard
+                key={post.post_id}
                 i={i}
                 post={post}
                 setPosts={setPosts}
@@ -235,7 +230,7 @@ export default function HomeScreen() {
                 {friendReqs?.map((fr) => (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <Avatar>
+                      <Avatar onClick={() => nav("/profile/" + fr.userId)}>
                         <AvatarImage
                           src={`${BACK_END}/attachment/${fr.avatar}`}
                         />

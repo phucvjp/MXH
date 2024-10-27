@@ -5,11 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BACK_END } from "@/constant/domain";
 import GroupService from "@/service/GroupService";
 import UserService, { User } from "@/service/UserService";
-import {
-  MessageCircle,
-  UserPlus,
-  Paperclip,
-} from "lucide-react";
+import { MessageCircle, UserPlus, Paperclip, UserMinus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCookie } from "typescript-cookie";
@@ -32,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { AvatarChange } from "./AvatarChange";
 import { BGChange } from "./BGChange";
 import { toast } from "react-toastify";
-import { PostCard } from "../PostCard";
+import { PostCard } from "../PostComp/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -103,7 +99,7 @@ export default function UserProfile() {
     PostService.getPostsByUser(parseInt(profileId || "-1")).then((data) =>
       setPosts(data)
     );
-  }, [data]);
+  }, [data, profile]);
 
   if (isPending) {
     return <LoadingAnimation />;
@@ -201,24 +197,62 @@ export default function UserProfile() {
             </h1>
             <p className="text-muted-foreground"></p>
           </div>
-          {user && user.userId !== profile?.userId && (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  UserService.addFriend(parseInt(profileId || "-1"));
-                }}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Friend
-              </Button>
-              <Button variant="outline" onClick={handleMessageReq}>
-                <MessageCircle className="mr-2 h-4 w-4" /> Message
-              </Button>
-              {/* <Button variant="outline">
+          {user &&
+            profile &&
+            user.userId !== profile?.userId &&
+            (!profile.friends?.includes(user?.userId) ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    UserService.addFriend(parseInt(profileId || "-1")).then(
+                      (data) => {
+                        if (data.friends?.includes(user?.userId)) {
+                          toast.success("Friend Added");
+                        } else {
+                          toast.success("Request Sent");
+                        }
+                        setProfile(data);
+                      }
+                    );
+                  }}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Friend
+                </Button>
+                <Button variant="outline" onClick={handleMessageReq}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Message
+                </Button>
+                {/* <Button variant="outline">
               <Settings className="h-4 w-4" />
             </Button> */}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    UserService.unfriend(parseInt(profileId || "-1")).then(
+                      (data) => {
+                        if (!data.friends?.includes(user?.userId)) {
+                          toast.success("Friend Removed");
+                        } else {
+                          toast.error("Failed to remove friend");
+                        }
+                        setProfile(data);
+                      }
+                    );
+                  }}
+                >
+                  <UserMinus className="mr-2 h-4 w-4" />
+                  Unfriend
+                </Button>
+                <Button variant="outline" onClick={handleMessageReq}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Message
+                </Button>
+                {/* <Button variant="outline">
+              <Settings className="h-4 w-4" />
+            </Button> */}
+              </div>
+            ))}
         </div>
       </div>
 
@@ -240,7 +274,7 @@ export default function UserProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Friends ({profile?.numberOfFriends || 0})</CardTitle>
+              <CardTitle>Friends ({profile?.friends?.length || 0})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-2">
@@ -254,7 +288,11 @@ export default function UserProfile() {
                         }}
                       >
                         <AvatarImage
-                          src={friend.avatar?`${BACK_END}/attachment/${friend.avatar}`:""}
+                          src={
+                            friend.avatar
+                              ? `${BACK_END}/attachment/${friend.avatar}`
+                              : ""
+                          }
                         />
                         <AvatarFallback>
                           {friend.firstName || ""}
@@ -357,6 +395,7 @@ export default function UserProfile() {
             <TabsContent value="posts">
               {posts?.map((post, i) => (
                 <PostCard
+                  key={post.post_id}
                   i={i}
                   post={post}
                   setPosts={setPosts}
@@ -389,7 +428,11 @@ export default function UserProfile() {
                       <div key={i} className="text-center">
                         <Avatar className="mx-auto mb-2 h-20 w-20">
                           <AvatarImage
-                            src={friend.avatar?`${BACK_END}/attachment/${friend.avatar}`:""}
+                            src={
+                              friend.avatar
+                                ? `${BACK_END}/attachment/${friend.avatar}`
+                                : ""
+                            }
                           />
                           <AvatarFallback>{friend.firstName}</AvatarFallback>
                         </Avatar>

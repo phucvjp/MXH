@@ -11,14 +11,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { BACK_END } from "@/constant/domain";
 import { Attachment } from "@/service/AttachmentService";
 import CmtService, { Comment } from "@/service/CmtService";
-import { DateUtil } from "@/service/DateUtil";
 import PostService, { Post } from "@/service/PostService";
 import { User } from "@/service/UserService";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Separator } from "@radix-ui/react-separator";
 import {
   MessageCircle,
   MoreHorizontal,
@@ -31,6 +30,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { CommentComponent } from "./CommentComponent";
+import useRealTime from "@/service/useRealtime";
 
 const formSchema = z.object({
   content: z.string(),
@@ -42,6 +43,20 @@ export const PostCard = ({ ...props }) => {
   const commentRefs = useRef<HTMLDivElement | null>(null);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
   const nav = useNavigate();
+  // const [post, setPost] = useState<Post>();
+
+  // useEffect(() => {
+  //   props.setPosts((prev: Post[]) =>
+  //     prev.map((p) => (p.post_id === post?.post_id ? post : p))
+  //   );
+  // }, [post]);
+
+  // useEffect(() => {
+  //   if (props.post) {
+  //     setPost(props.post);
+  //   }
+  // }, [props.post]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,6 +85,12 @@ export const PostCard = ({ ...props }) => {
       form.reset({ content: "", files: [] });
     });
   };
+
+  const formattedTime = useRealTime(
+    props.post?.postDate || "",
+    "formatPostTime"
+  );
+
   return (
     <Card key={props.i} className="mb-4">
       <CardHeader>
@@ -94,7 +115,7 @@ export const PostCard = ({ ...props }) => {
                 {props.post?.user?.firstName + " " + props.post?.user?.lastName}
               </p>
               <p className="text-sm text-muted-foreground">
-                {new DateUtil(props.post.postDate).formatPostTime()}
+                {formattedTime || ""}
               </p>
             </div>
           </div>
@@ -144,8 +165,8 @@ export const PostCard = ({ ...props }) => {
             )}
           </div>
         </div>
-        <Separator className="mt-4" />
-        <div className="flex justify-between items-center mt-4">
+        <Separator className="mt-2" />
+        <div className="flex justify-between items-center mt-1">
           <Button
             variant="ghost"
             size="sm"
@@ -190,47 +211,15 @@ export const PostCard = ({ ...props }) => {
             <Share2 className="mr-2 h-4 w-4" /> Share
           </Button>
         </div>
+        <Separator className="mt-1" />
         <div className="mt-4 space-y-4">
           {props.post?.comments?.map((comment: Comment) => (
-            <div
+            <CommentComponent
               key={comment.comment_id}
-              className="flex items-start space-x-4 bg-slate-50 rounded-xl p-3 bg-opacity-70"
-            >
-              <Avatar onClick={() => nav("/profile/" + comment.user.userId)}>
-                <AvatarImage
-                  src={
-                    comment.user.avatar
-                      ? `${BACK_END}/attachment` + comment.user.avatar
-                      : ""
-                  }
-                  alt={`${comment.user.firstName}'s avatar`}
-                />
-                <AvatarFallback>{comment.user.firstName[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-semibold">
-                  {comment.user.firstName + " " + comment.user.lastName}
-                </p>
-                <p>{comment.content}</p>
-                {comment.attachments?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {comment?.attachments?.map((image, index) => (
-                      <a
-                        href={`${BACK_END}/attachment/` + image.name}
-                        target="_blank"
-                      >
-                        <img
-                          key={index}
-                          src={`${BACK_END}/attachment/` + image.name}
-                          alt={`Comment image ${index + 1}`}
-                          className="w-24 h-24 object-cover rounded-md"
-                        />
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+              comment={comment}
+              setPosts={props.setPosts}
+              post={props.post}
+            />
           ))}
         </div>
         {showCommentInputs && (

@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { Attachment } from "./AttachmentService";
 import { toast } from "react-toastify";
-import { setCookie } from "typescript-cookie";
+import { removeCookie, setCookie } from "typescript-cookie";
 
 export interface User {
   userId: number;
@@ -16,7 +16,7 @@ export interface User {
   background: string;
   createdAt: string;
   updatedAt: string;
-  numberOfFriends: number;
+  friends: number[];
 }
 
 interface Account {
@@ -145,6 +145,8 @@ class UserService {
       );
       return response.data;
     } catch (error) {
+      localStorage.removeItem("token");
+      setCookie("user", "", { expires: -1 });
       throw new Error("Failed to fetch user info");
     }
   }
@@ -167,16 +169,12 @@ class UserService {
     }
   }
 
-  public async logout(): Promise<void> {
+  public logout(): void {
     try {
-      await axios.post(`${this.baseUrl}/logout`, null, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          ...NG_HEADER,
-        },
-      });
       localStorage.removeItem("token");
+      removeCookie("user");
       setCookie("user", "", { expires: -1 });
+      window.location.href = "/login";
     } catch (error) {
       throw new Error("Failed to logout");
     }
@@ -266,23 +264,19 @@ class UserService {
     }
   }
 
-  public async addFriend(userId: number): Promise<void> {
+  public async addFriend(userId: number): Promise<User> {
     try {
-      await axios
-        .post(
-          `${this.baseUrl}/addFriend/${userId}`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              ...NG_HEADER,
-            },
-          }
-        )
-        .then((response) => {
-          console.log(response);
-          toast.success(response.data);
-        });
+      const response: AxiosResponse<User> = await axios.post(
+        `${this.baseUrl}/addFriend/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
+          },
+        }
+      );
+      return response.data;
     } catch (error) {
       console.log(error);
       if (axios.isAxiosError(error) && error.response) {
@@ -291,6 +285,29 @@ class UserService {
         toast.error("An unexpected error occurred");
       }
       throw new Error("Failed to add friend");
+    }
+  }
+  public async unfriend(userId: number): Promise<User> {
+    try {
+      const response: AxiosResponse<User> = await axios.post(
+        `${this.baseUrl}/unfriend/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...NG_HEADER,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      throw new Error("Failed to unfriend");
     }
   }
 

@@ -3,7 +3,7 @@
 // export const WS_BACK_END: string = `ws://${BE_IP}:8080`;
 // export const NG_HEADER = {}
 
-export const BE_IP: string = "e551-14-169-10-12";
+export const BE_IP: string = "5be9-14-169-10-12";
 export const BACK_END: string = `https://${BE_IP}.ngrok-free.app`;
 export const WS_BACK_END: string = `wss://${BE_IP}.ngrok-free.app`;
 
