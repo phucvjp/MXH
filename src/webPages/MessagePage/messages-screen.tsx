@@ -287,7 +287,7 @@ export function MessagesScreen() {
       if (clients != null) {
         clients.forEach((client) => {
           if (client.client.connected) {
-            console.log("deactivating client:-274" + client.group.groupId);
+            console.log("deactivating client:" + client.group.groupId);
             client.client.deactivate();
             // client.client.unsubscribe("/topic/public/" + client.group.groupId); // unsubscribe from the topic\
             // client.client.forceDisconnect();
@@ -339,7 +339,7 @@ export function MessagesScreen() {
             users:
               message?.status == "ANNOUNCE" &&
               currentGroupRef.current?.users?.filter((u) => {
-                return u.userId != message.user.userId;
+                return u.userId === message.user.userId;
               }).length === 0
                 ? [...currentGroupRef.current?.users, message.user]
                 : [...(currentGroupRef.current?.users || [])],
@@ -359,14 +359,13 @@ export function MessagesScreen() {
                 users:
                   message?.status == "ANNOUNCE" &&
                   group?.users?.filter((u) => {
-                    return u.userId != message.user.userId;
+                    return u.userId === message.user.userId;
                   }).length === 0
-                    ? [...group.users]
-                    : [...group.users, message.user],
+                    ? [...group.users, message.user]
+                    : [...group.users],
                 messages: [...(group.messages || []), newMessage],
               };
             }
-
             return group;
           })
         )
