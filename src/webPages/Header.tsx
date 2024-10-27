@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -185,10 +186,61 @@ export const Header = ({ ...props }) => {
             </div>
           </nav>
         </div>
-        <button className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:text-accent-foreground h-9 py-2 mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden">
-          <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle Menu</span>
-        </button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="pr-0">
+            <div className="space-y-4 py-4">
+              <div className="px-3 py-2">
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+                  Menu
+                </h2>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      nav("/");
+                    }}
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    Home
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(`${BACK_END}`);
+                    }}
+                  >
+                    <Network className="mr-2 h-4 w-4" />
+                    Network
+                  </Button>
+
+                  <Button variant="ghost" className="w-full justify-start">
+                    <MessageCircleMore
+                      className="mr-2 h-4 w-4"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        nav("/messages");
+                      }}
+                    />
+                    Messages
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <div className="relative">

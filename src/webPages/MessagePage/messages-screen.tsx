@@ -512,7 +512,7 @@ export function MessagesScreen() {
       {" "}
       <div className="flex h-screen bg-gray-100">
         {/* Left Sidebar - Chat List */}
-        <div className="w-1/4 bg-white border-r flex flex-col justify-between">
+        <div className=" w-1/4 bg-white border-r flex flex-col justify-between">
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
               <div
@@ -522,7 +522,7 @@ export function MessagesScreen() {
                   nav("/");
                 }}
               >
-                <span className="hidden font-bold sm:inline-block">
+                <span className="font-bold inline-block">
                   <Star className="h-6 w-6" strokeWidth={"1px"} fill="yellow" />
                 </span>
               </div>
@@ -797,7 +797,7 @@ export function MessagesScreen() {
         </div>
 
         {/* Right Sidebar - Chat Info */}
-        <ScrollArea className="w-1/4 bg-white border-l p-4">
+        <ScrollArea className="hidden w-1/4 bg-white border-l p-4 sm:block">
           <h2 className="text-xl font-bold mb-4">Chat Info</h2>
           <div className="mb-4">
             <div>
