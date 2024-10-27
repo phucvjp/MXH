@@ -58,7 +58,7 @@ export const CommentComponent = ({ ...props }) => {
       if (cmt.comment_id === parentId) {
         return {
           ...cmt,
-          replies: [...cmt.replies, newReply],
+          replies: [...(cmt.replies || []), newReply],
         };
       } else if (cmt.replies.length > 0) {
         return {
