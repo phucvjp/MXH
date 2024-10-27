@@ -226,14 +226,15 @@ export const Header = ({ ...props }) => {
                     Network
                   </Button>
 
-                  <Button variant="ghost" className="w-full justify-start">
-                    <MessageCircleMore
-                      className="mr-2 h-4 w-4"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        nav("/messages");
-                      }}
-                    />
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      nav("/messages");
+                    }}
+                  >
+                    <MessageCircleMore className="mr-2 h-4 w-4" />
                     Messages
                   </Button>
                 </div>

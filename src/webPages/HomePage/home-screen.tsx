@@ -277,7 +277,7 @@ export default function HomeScreen() {
             </Card>
 
             {/* Suggested Friends */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <h2 className="text-lg font-semibold">People You May Know</h2>
               </CardHeader>
@@ -300,7 +300,7 @@ export default function HomeScreen() {
                   <Button size="sm">Add Friend</Button>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </aside>
         </main>
       </div>
