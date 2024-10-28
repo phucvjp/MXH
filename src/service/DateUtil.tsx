@@ -29,6 +29,9 @@ export class DateUtil {
     const hoursDifference = this.getHoursDifference();
 
     if (minutesDifference < 60) {
+      if (minutesDifference < 1) {
+        return "Just now";
+      }
       return `${minutesDifference} minutes ago`;
     } else if (hoursDifference < 6) {
       return `${hoursDifference} hours ago`;
@@ -48,7 +51,7 @@ export class DateUtil {
     const minutesDifference = this.getMinutesDifference();
 
     if (minutesDifference < 60) {
-      return `${minutesDifference} minutes ago`;
+      return `${minutesDifference < 0 ? 0 : minutesDifference} minutes ago`;
     } else if (this.isSameDay()) {
       const formattedTime = this.date.toTimeString().slice(0, 5); // hh:mm
       return formattedTime;

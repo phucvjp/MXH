@@ -11,6 +11,7 @@ import Login from "./webPages/AuthenPage/Login.tsx";
 import UserProfile from "./webPages/UserProfile/UserProfile.tsx";
 import HomeScreen from "./webPages/HomePage/home-screen.tsx";
 import { Header } from "./webPages/Header.tsx";
+import { PostScreen } from "./webPages/PostPage/PostScreen.tsx";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,15 @@ createRoot(document.getElementById("root")!).render(
                     <>
                       <Header className="sticky"></Header>
                       <UserProfile></UserProfile>
+                    </>
+                  }
+                />
+                <Route
+                  path="post/:postId"
+                  element={
+                    <>
+                      <Header className="sticky"></Header>
+                      <PostScreen></PostScreen>
                     </>
                   }
                 />

@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { BACK_END } from "@/constant/domain";
 import { getCookie, setCookie } from "typescript-cookie";
-import { PostCard } from "../PostComp/PostCard";
+import { PostCard } from "../PostPage/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -115,13 +115,19 @@ export default function HomeScreen() {
                 <UserIcon className="h-4 w-4" />
                 <span>Profile</span>
               </a>
-              <a
+              <Button
+                variant={"ghost"}
                 className="flex items-center space-x-2 rounded-lg px-3 py-2 text-foreground transition-all hover:bg-accent"
-                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  nav("/profile/" + user?.userId, {
+                    state: { tab: "friends" },
+                  });
+                }}
               >
                 <Users className="h-4 w-4" />
                 <span>Friends</span>
-              </a>
+              </Button>
               <a
                 className="flex items-center space-x-2 rounded-lg px-3 py-2 text-foreground transition-all hover:bg-accent relative"
                 href="messages"

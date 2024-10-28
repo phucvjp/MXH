@@ -94,6 +94,23 @@ class PostService {
       throw new Error("Failed to fetch posts");
     }
   }
+
+  public async getPostById(postId: number): Promise<Post> {
+    try {
+      const response: AxiosResponse<Post> = await axios.get(
+        `${this.baseUrl}/${postId}`,
+        {
+          headers: {
+            ...NG_HEADER,
+          },
+        }
+      );
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      throw new Error("Failed to fetch posts");
+    }
+  }
 }
 
 export default new PostService();

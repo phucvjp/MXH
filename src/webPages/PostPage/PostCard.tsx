@@ -67,8 +67,11 @@ export const PostCard = ({ ...props }) => {
   const handleCommentClick = () => {
     setShowCommentInputs((prev) => !prev);
     setTimeout(() => {
-      if (showCommentInputs && commentRefs.current) {
-        commentRefs.current?.scrollIntoView({ behavior: "smooth" });
+      if (!showCommentInputs && commentRefs.current) {
+        commentRefs.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
       }
     }, 100);
   };
@@ -83,6 +86,7 @@ export const PostCard = ({ ...props }) => {
         )
       );
       form.reset({ content: "", files: [] });
+      setShowCommentInputs(false);
     });
   };
 
@@ -92,7 +96,7 @@ export const PostCard = ({ ...props }) => {
   );
 
   return (
-    <Card key={props.i} className="mb-4">
+    <Card key={props.i} className="w-full mb-4">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -202,12 +206,30 @@ export const PostCard = ({ ...props }) => {
             variant="ghost"
             size="sm"
             onClick={() => {
+              if (!props.user) {
+                toast.error("Please login to comment");
+                return;
+              }
               handleCommentClick();
             }}
           >
             <MessageCircle className="mr-2 h-4 w-4" /> Comment
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(
+                window.location.hostname +
+                  (window.location.port.length > 0
+                    ? ":" + window.location.port
+                    : "") +
+                  "/post/" +
+                  props.post?.post_id
+              );
+              toast.success("Copied to clipboard");
+            }}
+          >
             <Share2 className="mr-2 h-4 w-4" /> Share
           </Button>
         </div>
@@ -219,6 +241,7 @@ export const PostCard = ({ ...props }) => {
               comment={comment}
               setPosts={props.setPosts}
               post={props.post}
+              user={props.user}
             />
           ))}
         </div>

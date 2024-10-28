@@ -20,10 +20,11 @@ import { Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { z } from "zod";
 
 const formSchema = z.object({
-  content: z.string(),
+  content: z.string().min(1, { message: "Comment cannot be empty" }),
   files: z.array(z.any()).max(5, { message: "Max 5 images" }),
 });
 
@@ -41,10 +42,17 @@ export const CommentComponent = ({ ...props }) => {
   });
   const nav = useNavigate();
   const handleReplyClick = () => {
+    if (!props.user) {
+      toast.error("Please login to comment");
+      return;
+    }
     setShowCommentInputs((prev) => !prev);
     setTimeout(() => {
-      if (showCommentInputs && replyRefs.current) {
-        replyRefs.current?.scrollIntoView({ behavior: "smooth" });
+      if (!showCommentInputs && replyRefs.current) {
+        replyRefs.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
       }
     }, 100);
   };
@@ -60,7 +68,7 @@ export const CommentComponent = ({ ...props }) => {
           ...cmt,
           replies: [...(cmt.replies || []), newReply],
         };
-      } else if (cmt.replies.length > 0) {
+      } else if (cmt.replies?.length > 0) {
         return {
           ...cmt,
           replies: addReplyToComment(cmt.replies, parentId, newReply),
@@ -89,6 +97,7 @@ export const CommentComponent = ({ ...props }) => {
         });
       });
       form.reset({ content: "", files: [] });
+      setShowCommentInputs(false);
     });
   };
 
@@ -165,54 +174,58 @@ export const CommentComponent = ({ ...props }) => {
                 comment={reply}
                 setPosts={props.setPosts}
                 post={props.post}
+                user={props.user}
               />
             </div>
           ))}
-        {showCommentInputs && (
-          <div ref={replyRefs} className="mt-4">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleCommentReply)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          className="flex-1 mr-2"
-                          placeholder="Type a title..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <ScrollArea className="h-[100px] my-3" hidden={openAddImages}>
+        <div ref={replyRefs} className="mt-4 flex">
+          {showCommentInputs && (
+            <>
+              <div className="border-l-2 border-b-2 border-gray-300 pl-2 h-6 w-6"></div>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleCommentReply)}
+                  className="space-y-4 w-full"
+                >
                   <FormField
                     control={form.control}
-                    name="files"
+                    name="content"
                     render={({ field }) => (
-                      <DropzoneComponent control={form.control} {...field} />
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            className="flex-1 mr-2"
+                            placeholder="Type a title..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                </ScrollArea>
-                <div className="flex justify-between">
-                  <Paperclip
-                    className="w-8 cursor-pointer translate-x-"
-                    onClick={() => setOpenAddImages(!openAddImages)}
-                  />
-                  <Button type="submit" className="w-fit">
-                    Comment
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        )}
+                  <ScrollArea className="h-[100px] my-3" hidden={openAddImages}>
+                    <FormField
+                      control={form.control}
+                      name="files"
+                      render={({ field }) => (
+                        <DropzoneComponent control={form.control} {...field} />
+                      )}
+                    />
+                  </ScrollArea>
+                  <div className="flex justify-between">
+                    <Paperclip
+                      className="w-8 cursor-pointer translate-x-"
+                      onClick={() => setOpenAddImages(!openAddImages)}
+                    />
+                    <Button type="submit" className="w-fit">
+                      Comment
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </>
+          )}{" "}
+        </div>
       </div>
     </div>
   );

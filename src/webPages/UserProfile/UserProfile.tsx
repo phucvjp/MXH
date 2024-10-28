@@ -7,7 +7,7 @@ import GroupService from "@/service/GroupService";
 import UserService, { User } from "@/service/UserService";
 import { MessageCircle, UserPlus, Paperclip, UserMinus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getCookie } from "typescript-cookie";
 import PostService, { Post } from "@/service/PostService";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { AvatarChange } from "./AvatarChange";
 import { BGChange } from "./BGChange";
 import { toast } from "react-toastify";
-import { PostCard } from "../PostComp/PostCard";
+import { PostCard } from "../PostPage/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -47,6 +47,7 @@ export default function UserProfile() {
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [bGPreview, setBGPreview] = useState<string>();
+  const tab = useLocation().state?.tab;
 
   const nav = useNavigate();
 
@@ -61,6 +62,7 @@ export default function UserProfile() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: "",
       content: "",
       files: [],
     },
@@ -69,7 +71,6 @@ export default function UserProfile() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token && token !== "" && token !== "undefined") {
-      console.log(profileId);
       setUser(JSON.parse(getCookie("user") ?? "{}"));
       scrollTo({
         top: 0,
@@ -386,13 +387,13 @@ export default function UserProfile() {
             </Card>
           )}
 
-          <Tabs defaultValue="posts">
+          <Tabs defaultValue={tab || "posts"}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="posts">Posts</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="friends">Friends</TabsTrigger>
             </TabsList>
-            <TabsContent value="posts">
+            <TabsContent value="posts" id="posts">
               {posts?.map((post, i) => (
                 <PostCard
                   key={post.post_id}
@@ -403,7 +404,7 @@ export default function UserProfile() {
                 ></PostCard>
               ))}
             </TabsContent>
-            <TabsContent value="about">
+            <TabsContent value="about" id="about">
               <Card>
                 <CardContent className="space-y-4 mt-4">
                   <h3 className="text-lg font-semibold">Work and Education</h3>
@@ -420,13 +421,18 @@ export default function UserProfile() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="friends">
+            <TabsContent value="friends" id="friends">
               <Card>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
                     {friends?.map((friend, i) => (
                       <div key={i} className="text-center">
-                        <Avatar className="mx-auto mb-2 h-20 w-20">
+                        <Avatar
+                          className="mx-auto mb-2 h-20 w-20"
+                          onClick={() => {
+                            nav(`/profile/${friend.userId}`);
+                          }}
+                        >
                           <AvatarImage
                             src={
                               friend.avatar

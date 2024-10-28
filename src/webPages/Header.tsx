@@ -112,8 +112,28 @@ export const Header = ({ ...props }) => {
   } else if (isLoading || isPending) return <></>;
 
   const onMessageReceived = (payload: IMessage) => {
+    let oldTitle = document.title;
+    let msg = "New Message Received!";
+    let timeoutId: ReturnType<typeof setInterval> | null = null;
+    let blink = () => {
+      document.title = document.title === msg ? oldTitle : msg;
+    };
+    let clear = () => {
+      if (timeoutId) {
+        clearInterval(timeoutId);
+      }
+      document.title = oldTitle;
+      window.onmousemove = null;
+      timeoutId = null;
+    };
+    if (!timeoutId) {
+      timeoutId = setInterval(blink, 1000);
+      window.onmousemove = clear;
+    }
+
     console.log(payload.body);
     setPing(true);
+    new Audio("/simple-notification-152054.mp3").play();
     setTimeout(() => setPing(false), 3000);
   };
   const handleSearch = (input: string) => {
