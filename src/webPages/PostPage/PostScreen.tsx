@@ -48,7 +48,7 @@ export const PostScreen = () => {
       <PostCard
         key={posts[0]?.post_id}
         i={posts[0]?.post_id}
-        post={posts[0]}
+        post={posts[0] || data}
         setPosts={setPosts}
         user={user}
       ></PostCard>

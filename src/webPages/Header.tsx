@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 import { BACK_END, WS_BACK_END } from "@/constant/domain";
 import UserService, { User } from "@/service/UserService";
+import { Notifi } from "@/service/NotificationService";
+
 import { Client, IMessage } from "@stomp/stompjs";
 import { useQuery } from "@tanstack/react-query";
 
@@ -36,13 +38,17 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCookie, setCookie } from "typescript-cookie";
+import { Notification } from "./Noti/Notification";
 
 export const Header = ({ ...props }) => {
-  const [ping, setPing] = useState<boolean>(false);
+  const [messagePing, setMessagePing] = useState<boolean>(false);
+  const [notiPing, setNotiPing] = useState<boolean>(false);
   const token = localStorage.getItem("token");
   const [user, setUser] = useState<User>();
   const [searchUsers, setSearchUsers] = useState<User[]>();
   const [input, setInput] = useState<string>("");
+  const [newNoti, setNewNoti] = useState<Notifi | null>(null);
+  const [showNoti, setShowNoti] = useState<boolean>(false);
 
   const nav = useNavigate();
 
@@ -112,6 +118,23 @@ export const Header = ({ ...props }) => {
   } else if (isLoading || isPending) return <></>;
 
   const onMessageReceived = (payload: IMessage) => {
+    if (payload.body != "New message") {
+      const pl: Notifi = JSON.parse(payload.body);
+      if (pl)
+        if (pl.type === "FRIEND_REQUEST") {
+          console.log("New Friend Request Received!");
+        } else if (pl.type === "FRIEND_ACCEPTED") {
+          console.log("Friend Request Accepted!");
+        } else if (pl.type === "LIKE") {
+          console.log("New Like Received!");
+        } else if (pl.type === "COMMENT") {
+          console.log("New Comment Received!");
+        }
+      setNotiPing(true);
+      setTimeout(() => setNotiPing(false), 3000);
+      setNewNoti(pl);
+      return;
+    }
     let oldTitle = document.title;
     let msg = "New Message Received!";
     let timeoutId: ReturnType<typeof setInterval> | null = null;
@@ -130,11 +153,10 @@ export const Header = ({ ...props }) => {
       timeoutId = setInterval(blink, 1000);
       window.onmousemove = clear;
     }
-
     console.log(payload.body);
-    setPing(true);
+    setMessagePing(true);
     new Audio("/simple-notification-152054.mp3").play();
-    setTimeout(() => setPing(false), 3000);
+    setTimeout(() => setMessagePing(false), 3000);
   };
   const handleSearch = (input: string) => {
     if (input) {
@@ -200,7 +222,7 @@ export const Header = ({ ...props }) => {
               >
                 <MessageCircleMore className="h-4 w-4 mr-2" /> Messages
               </div>
-              {ping && (
+              {messagePing && (
                 <div className="w-4 h-4 rounded-full bg-red-500 animate-ping absolute z-50 -top-1 -right-2 " />
               )}
             </div>
@@ -331,17 +353,28 @@ export const Header = ({ ...props }) => {
           </div>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-2">
-                  <Bell className="h-4 w-4" />
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </TooltipTrigger>
+              <TooltipTrigger asChild></TooltipTrigger>
               <TooltipContent>
                 <p>Notifications</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="mr-2">
+                <div className="relative">
+                  {" "}
+                  <Bell className="h-4 w-4" />
+                  {notiPing && (
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-ping absolute z-50 -top-1 -right-1 " />
+                  )}
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <Notification newNoti={newNoti} user={user} />
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

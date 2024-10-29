@@ -31,9 +31,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { CommentComponent } from "./CommentComponent";
-import useRealTime from "@/service/useRealtime";
+import { formatDistanceToNow } from "date-fns";
 
 const formSchema = z.object({
+  postId: z.number(),
   content: z.string(),
   files: z.array(z.any()).max(5, { message: "Max 5 images" }),
 });
@@ -60,6 +61,7 @@ export const PostCard = ({ ...props }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      postId: props.post?.post_id || 0,
       content: "",
       files: [],
     },
@@ -90,11 +92,6 @@ export const PostCard = ({ ...props }) => {
     });
   };
 
-  const formattedTime = useRealTime(
-    props.post?.postDate || "",
-    "formatPostTime"
-  );
-
   return (
     <Card key={props.i} className="w-full mb-4">
       <CardHeader>
@@ -119,7 +116,9 @@ export const PostCard = ({ ...props }) => {
                 {props.post?.user?.firstName + " " + props.post?.user?.lastName}
               </p>
               <p className="text-sm text-muted-foreground">
-                {formattedTime || ""}
+                {formatDistanceToNow(new Date(props.post?.postDate), {
+                  addSuffix: true,
+                })}
               </p>
             </div>
           </div>

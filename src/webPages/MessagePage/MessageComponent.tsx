@@ -7,12 +7,10 @@ import {
 } from "@/components/ui/tooltip";
 import { BACK_END } from "@/constant/domain";
 import { Attachment } from "@/service/AttachmentService";
-import useRealTime from "@/service/useRealtime";
+import { formatDistanceToNow } from "date-fns";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 export const MessageComponent = ({ ...props }) => {
-  const formattedTime = useRealTime(props.msg?.updateAt, "formatMessageTime");
-
   if (props.msg?.status === "MESSAGE")
     return (
       <>
@@ -92,7 +90,11 @@ export const MessageComponent = ({ ...props }) => {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{formattedTime}</p>
+                  <p>
+                    {formatDistanceToNow(new Date(props.msg?.updateAt), {
+                      addSuffix: true,
+                    })}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -104,7 +106,11 @@ export const MessageComponent = ({ ...props }) => {
     return (
       <>
         <div className="flex justify-center mb-4">
-          <p>{formattedTime}</p>
+          <p>
+            {formatDistanceToNow(new Date(props.msg?.updateAt), {
+              addSuffix: true,
+            })}
+          </p>
         </div>
         <div className="flex justify-center mb-4">
           <div className="p-2 bg-gray-300 rounded-lg max-w-fit">

@@ -15,6 +15,7 @@ export interface Post {
   comments: Comment[];
 }
 
+
 // interface PostModel {
 //   title: string;
 //   content: string;

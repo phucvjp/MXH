@@ -14,8 +14,8 @@ import { BACK_END } from "@/constant/domain";
 import { Attachment } from "@/service/AttachmentService";
 import CmtService, { Comment } from "@/service/CmtService";
 import { Post } from "@/service/PostService";
-import useRealTime from "@/service/useRealtime";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatDistanceToNow } from "date-fns";
 import { Paperclip } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 
 const formSchema = z.object({
+  postId: z.number(),
   content: z.string().min(1, { message: "Comment cannot be empty" }),
   files: z.array(z.any()).max(5, { message: "Max 5 images" }),
 });
@@ -36,6 +37,7 @@ export const CommentComponent = ({ ...props }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      postId: props.post?.post_id || 0,
       content: "",
       files: [],
     },
@@ -101,11 +103,6 @@ export const CommentComponent = ({ ...props }) => {
     });
   };
 
-  const formattedTime = useRealTime(
-    props.comment.commentDate,
-    "formatPostTime"
-  );
-
   return (
     <div className={`${props.class} flex-1`}>
       <div
@@ -149,7 +146,11 @@ export const CommentComponent = ({ ...props }) => {
       </div>
       <div>
         <div>
-          <span className="text-sm text-gray-400">{formattedTime}</span>
+          <span className="text-sm text-gray-400">
+            {formatDistanceToNow(new Date(props.comment.commentDate), {
+              addSuffix: true,
+            })}
+          </span>
           <span>
             <Button variant="ghost" size="sm" onClick={handleReplyClick}>
               Reply
