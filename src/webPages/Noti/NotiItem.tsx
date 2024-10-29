@@ -7,7 +7,6 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { Notifi, NotifiType } from "@/service/NotificationService";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 const NotificationItem = ({ noti }: { noti: Notifi }) => {

@@ -48,7 +48,6 @@ export const Header = ({ ...props }) => {
   const [searchUsers, setSearchUsers] = useState<User[]>();
   const [input, setInput] = useState<string>("");
   const [newNoti, setNewNoti] = useState<Notifi | null>(null);
-  const [showNoti, setShowNoti] = useState<boolean>(false);
 
   const nav = useNavigate();
 
