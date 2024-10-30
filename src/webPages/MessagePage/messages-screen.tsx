@@ -476,14 +476,40 @@ export function MessagesScreen() {
     }).then((res) => {
       console.log(res);
       setMaxPage(res.totalPages);
+      let temp = res.content;
+      let newMsgs: Message[] = [];
+      if (currentGroupRef.current?.messages) {
+        newMsgs = [...currentGroupRef.current?.messages];
+      } else {
+        newMsgs = [];
+      }
+      temp.forEach((msg: Message) => {
+        if (
+          currentGroupRef.current?.messages.filter((message) => {
+            return message.messageId === msg.messageId;
+          }).length === 0
+        ) {
+          newMsgs = [
+            {
+              messageId: msg.messageId,
+              content: msg.content,
+              sendAt: msg.sendAt,
+              updateAt: msg.updateAt,
+              user: msg.user,
+              status: msg.status,
+              attachments: msg.attachments,
+              groupId: msg.groupId,
+            },
+            ...(newMsgs || []),
+          ];
+        }
+      });
+
       dispatch(
         setCurrentGroup({
           ...currentGroupRef.current,
           numberOfMessages: res.totalElements,
-          messages: [
-            ...res.content.reverse(),
-            ...(currentGroupRef.current?.messages || []),
-          ],
+          messages: [...newMsgs],
         })
       );
       setLoadMessage(false);
