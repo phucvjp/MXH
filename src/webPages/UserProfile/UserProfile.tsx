@@ -48,6 +48,7 @@ export default function UserProfile() {
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [bGPreview, setBGPreview] = useState<string>();
   const tab = useLocation().state?.tab;
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const nav = useNavigate();
 
@@ -130,6 +131,8 @@ export default function UserProfile() {
       console.log(response);
       setPosts((prev) => [response, ...prev]);
       form.reset();
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
     });
   };
   return (
@@ -366,6 +369,7 @@ export default function UserProfile() {
                         name="files"
                         render={({ field }) => (
                           <DropzoneComponent
+                            submited={submited}
                             control={form.control}
                             {...field}
                           />

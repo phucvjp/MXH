@@ -31,7 +31,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { CommentComponent } from "./CommentComponent";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 
 const formSchema = z.object({
   postId: z.number(),
@@ -44,6 +44,8 @@ export const PostCard = ({ ...props }) => {
   const commentRefs = useRef<HTMLDivElement | null>(null);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
   const nav = useNavigate();
+  const [submited, setSubmited] = useState<boolean>(false);
+
   // const [post, setPost] = useState<Post>();
 
   // useEffect(() => {
@@ -89,6 +91,8 @@ export const PostCard = ({ ...props }) => {
       );
       form.reset({ content: "", files: [] });
       setShowCommentInputs(false);
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
     });
   };
 
@@ -272,7 +276,9 @@ export const PostCard = ({ ...props }) => {
                     control={form.control}
                     name="files"
                     render={({ field }) => (
-                      <DropzoneComponent control={form.control} {...field} />
+                      <DropzoneComponent 
+                      submited={submited}
+                      control={form.control} {...field} />
                     )}
                   />
                 </ScrollArea>

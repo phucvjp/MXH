@@ -10,7 +10,6 @@ import {
   Phone,
   Video,
   Info,
-  Plus,
   Image,
   Crown,
   LogOut,
@@ -51,6 +50,9 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
 import { ConfirmChat } from "./confirmChat";
 import { MessageComponent } from "./MessageComponent";
+import { CreateGroup } from "./createGroup";
+import { GroupAvatarChange } from "./GroupAvatarChange";
+import { GroupNameChange } from "./GroupNameChange";
 const formSchema = z.object({
   token: z.string(),
   content: z.string(),
@@ -77,6 +79,8 @@ export function MessagesScreen() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const location = useLocation();
   const [tempChat, setTempChat] = useState<Group | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const { isLoading, isPending, isError, data, error } = useQuery({
     queryKey: ["groups"],
@@ -103,6 +107,20 @@ export function MessagesScreen() {
       nav(location.pathname, { replace: true, state: {} });
     }
   }, [location, nav]);
+
+  useEffect(() => {
+    setAvatarPreview(
+      currentGroup?.avatar
+        ? `${BACK_END}/attachment/${currentGroupRef.current?.avatar?.name}`
+        : currentGroupRef.current?.type === "GROUP"
+        ? `/placeholder-avatar-${currentGroupRef.current?.avatar?.name}.png`
+        : `${BACK_END}/attachment/${
+            currentGroupRef.current?.users?.filter((user1) => {
+              return user1.userId !== user?.userId;
+            })[0]?.avatar || ""
+          }`
+    );
+  }, [currentGroupRef.current]);
 
   useEffect(() => {
     console.log("new message", isNewMess);
@@ -416,17 +434,12 @@ export function MessagesScreen() {
         form.reset();
         form.setValue("files", []);
       }
-
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
       form.reset();
     }
   };
 
-  const handleCreateGroup = () => {
-    GroupService.createGroup(`${groups?.length || 0}`).then((group) => {
-      dispatch(setGroups([group, ...groups]));
-      setAddNewGroup((prev) => !prev);
-    });
-  };
 
   const handleChangeGroup = (group: Group) => {
     // dispatch(
@@ -553,12 +566,12 @@ export function MessagesScreen() {
                 </span>
               </div>
               <h2 className="text-xl font-bold">Chats</h2>
-              <Button
-                className="border-collapse rounded-full"
-                onClick={handleCreateGroup}
-              >
-                <Plus className="w-3/4" />
-              </Button>
+              <CreateGroup
+                dispatch={dispatch}
+                setGroups={setGroups}
+                groups={groups}
+                setAddNewGroup={setAddNewGroup}
+              />
             </div>
 
             <div className="relative mb-4">
@@ -597,8 +610,10 @@ export function MessagesScreen() {
                       >
                         <AvatarImage
                           src={
-                            group?.avatar
-                              ? `${BACK_END}/attachment/${group?.avatar}`
+                            group.groupId == currentGroup?.groupId
+                              ? avatarPreview
+                              : group?.avatar
+                              ? `${BACK_END}/attachment/${group?.avatar.name}`
                               : group.type === "GROUP"
                               ? `/placeholder-avatar-${group.groupId}.png`
                               : `${BACK_END}/attachment/${
@@ -687,17 +702,7 @@ export function MessagesScreen() {
                 }}
               >
                 <AvatarImage
-                  src={
-                    currentGroupRef.current?.avatar
-                      ? `${BACK_END}/attachment/${currentGroupRef.current?.avatar}`
-                      : currentGroupRef.current?.type === "GROUP"
-                      ? `/placeholder-avatar-${currentGroupRef.current?.avatar}.png`
-                      : `${BACK_END}/attachment/${
-                          currentGroupRef.current?.users?.filter((user1) => {
-                            return user1.userId !== user?.userId;
-                          })[0]?.avatar || ""
-                        }`
-                  }
+                  src={avatarPreview}
                   alt={
                     currentGroupRef.current?.type === "GROUP"
                       ? currentGroupRef.current?.name
@@ -781,6 +786,7 @@ export function MessagesScreen() {
                         name="files"
                         render={({ field }) => (
                           <DropzoneComponent
+                            submited={submited}
                             control={form.control}
                             {...field}
                           />
@@ -826,9 +832,68 @@ export function MessagesScreen() {
         <ScrollArea className="hidden w-1/4 bg-white border-l p-4 sm:block">
           <h2 className="text-xl font-bold mb-4">Chat Info</h2>
           <div className="mb-4">
-            <div>
-              <h3 className="font-semibold mb-2">Shared Files</h3>
-              <p className="text-sm text-gray-500">No files shared yet</p>
+            <div className="h-fit flex items-center justify-center">
+              {currentGroupRef.current?.type === "GROUP" ? (
+                <GroupAvatarChange
+                  avatarPreview={avatarPreview}
+                  group={currentGroupRef.current}
+                  setAvatarPreview={setAvatarPreview}
+                />
+              ) : (
+                <Avatar
+                  className="sm:h-24 sm:w-24 md:h-32 md:w-32 border-4 border-white hover:cursor-pointer"
+                  onClick={() => {
+                    currentGroupRef.current?.type !== "GROUP" &&
+                      handleViewPro(
+                        currentGroupRef.current?.users?.filter((user1) => {
+                          return user1.userId !== user?.userId;
+                        })[0].userId || 0
+                      );
+                  }}
+                >
+                  <AvatarImage
+                    src={avatarPreview}
+                    alt={
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0]?.firstName
+                    }
+                  />
+                  <AvatarFallback>
+                    {
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0]?.firstName
+                    }
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+            <div className="flex items-center justify-center">
+              {currentGroupRef.current?.type === "GROUP" ? (
+                <>
+                  <h2 className="text-xl font-semibold">
+                    {currentGroupRef.current?.name}
+                  </h2>
+                  <GroupNameChange
+                    group={currentGroupRef.current}
+                    dispatch={dispatch}
+                    setGroups={setGroups}
+                    setCurrentGroup={setCurrentGroup}
+                    groups={groups}
+                  />
+                </>
+              ) : (
+                <h2 className="text-xl font-semibold">
+                  {currentGroupRef.current?.users?.filter((user1) => {
+                    return user1.userId !== user?.userId;
+                  })[0]?.firstName +
+                    " " +
+                    currentGroupRef.current?.users?.filter((user1) => {
+                      return user1.userId !== user?.userId;
+                    })[0]?.lastName}
+                </h2>
+              )}
             </div>
             {currentGroupRef.current?.type === "GROUP" && (
               <>

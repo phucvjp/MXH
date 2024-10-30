@@ -39,6 +39,7 @@ export default function HomeScreen() {
   // const [friendReqPage, setFriendReqPage] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const { isLoading, isPending, isError, data, error } = useQuery({
     queryKey: ["user", token],
@@ -72,6 +73,8 @@ export default function HomeScreen() {
       console.log(response);
       setPosts((prev) => [response, ...prev]);
       form.reset();
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
     });
   };
   if (isPending) {
@@ -193,6 +196,7 @@ export default function HomeScreen() {
                         name="files"
                         render={({ field }) => (
                           <DropzoneComponent
+                            submited={submited}
                             control={form.control}
                             {...field}
                           />

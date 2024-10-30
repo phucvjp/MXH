@@ -14,6 +14,7 @@ interface DropzoneComponentProps {
   name: string;
   maxFiles?: number;
   fieldMessage?: string;
+  submited: boolean;
 }
 
 export default function DropzoneComponent({
@@ -21,6 +22,7 @@ export default function DropzoneComponent({
   name,
   maxFiles = 5,
   fieldMessage = "Drag 'n' drop some images here, or click to select images",
+  submited,
 }: DropzoneComponentProps) {
   return (
     <Controller
@@ -41,6 +43,10 @@ export default function DropzoneComponent({
             ]);
           },
         });
+
+        useEffect(() => {
+          setAcceptedFiles([]);
+        }, [submited]);
         const removeFile = (fileToRemove: AcceptedFile) => {
           setAcceptedFiles((prevFiles) =>
             prevFiles.filter((file) => file !== fileToRemove)

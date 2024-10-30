@@ -34,6 +34,8 @@ export const CommentComponent = ({ ...props }) => {
   const replyRefs = useRef<HTMLDivElement | null>(null);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
   const [showReplies, setShowReplies] = useState<boolean>(false);
+  const [submited, setSubmited] = useState<boolean>(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -100,6 +102,9 @@ export const CommentComponent = ({ ...props }) => {
       });
       form.reset({ content: "", files: [] });
       setShowCommentInputs(false);
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
+      setShowReplies(true);
     });
   };
 
@@ -209,7 +214,9 @@ export const CommentComponent = ({ ...props }) => {
                       control={form.control}
                       name="files"
                       render={({ field }) => (
-                        <DropzoneComponent control={form.control} {...field} />
+                        <DropzoneComponent 
+                        submited={submited}
+                        control={form.control} {...field} />
                       )}
                     />
                   </ScrollArea>
