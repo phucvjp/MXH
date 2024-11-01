@@ -46,7 +46,7 @@ export const groupsSlice = createSlice({
     setCurrentPageList: (state, action) => {
       state.currentPageList = action.payload;
     },
-    error: (state, action) => {},
+    error: () => {},
   },
 });
 

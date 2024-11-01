@@ -40,7 +40,7 @@ export const AvatarChange = ({ ...props }) => {
           setAvatarPreview(`${BACK_END}/attachment/${res?.name}`);
         }
       })
-      .catch((error) => {
+      .catch(() => {
         toast.error("Failed to upload avatar");
       });
   };

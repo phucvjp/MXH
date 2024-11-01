@@ -1,45 +1,14 @@
 import { useEffect, useState } from "react";
-import {
-  Bell,
-  Home,
-  Menu,
-  MessageCircle,
-  Moon,
-  Search,
-  Sun,
-  UserIcon,
-  Users,
-  Share,
-  ThumbsUp,
-  Star,
-  Paperclip,
-  MoreHorizontal,
-  Share2,
-} from "lucide-react";
+import { Home, MessageCircle, UserIcon, Users, Paperclip } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import UserService, { User } from "@/service/UserService";
 import { useNavigate } from "react-router-dom";
-import { Client, IMessage } from "@stomp/stompjs";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
 import PostService, { Post } from "@/service/PostService";
-import { toast } from "react-toastify";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,10 +21,9 @@ import {
 } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
-import { BACK_END, BE_IP } from "@/constant/domain";
-import { DateUtil } from "@/service/DateUtil";
-import { Separator } from "@/components/ui/separator";
+import { BACK_END } from "@/constant/domain";
 import { getCookie, setCookie } from "typescript-cookie";
+import { PostCard } from "../PostPage/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -68,9 +36,10 @@ export default function HomeScreen() {
   const [user, setUser] = useState<User>();
   const [friendReqs, setFriendReqs] = useState<User[]>([]);
   const token = localStorage.getItem("token");
-  const [friendReqPage, setFriendReqPage] = useState(1);
+  // const [friendReqPage, setFriendReqPage] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const { isLoading, isPending, isError, data, error } = useQuery({
     queryKey: ["user", token],
@@ -89,7 +58,7 @@ export default function HomeScreen() {
     console.log(data);
     if (data) {
       setUser(data);
-      UserService.getFriendReqs(data.userId).then((data) => {
+      UserService.getFriendReqs().then((data) => {
         setFriendReqs(data);
       });
       PostService.getRelatedPosts({ size: 60 }).then((res) =>
@@ -104,6 +73,8 @@ export default function HomeScreen() {
       console.log(response);
       setPosts((prev) => [response, ...prev]);
       form.reset();
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
     });
   };
   if (isPending) {
@@ -147,13 +118,19 @@ export default function HomeScreen() {
                 <UserIcon className="h-4 w-4" />
                 <span>Profile</span>
               </a>
-              <a
+              <Button
+                variant={"ghost"}
                 className="flex items-center space-x-2 rounded-lg px-3 py-2 text-foreground transition-all hover:bg-accent"
-                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  nav("/profile/" + user?.userId, {
+                    state: { tab: "friends" },
+                  });
+                }}
               >
                 <Users className="h-4 w-4" />
                 <span>Friends</span>
-              </a>
+              </Button>
               <a
                 className="flex items-center space-x-2 rounded-lg px-3 py-2 text-foreground transition-all hover:bg-accent relative"
                 href="messages"
@@ -217,7 +194,13 @@ export default function HomeScreen() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            submited={submited}
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex justify-between">
@@ -236,111 +219,13 @@ export default function HomeScreen() {
 
             {/* Posts Feed */}
             {posts.map((post, i) => (
-              <Card key={i} className="mb-4">
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage
-                          src={`${BACK_END}/attachment/${post.user?.avatar}`}
-                        />
-                        <AvatarFallback>{post.user?.firstName}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">
-                          {post.user?.firstName + " " + post.user?.lastName}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new DateUtil(post.postDate).formatPostTime()}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {post.title && (
-                    <h3 className="font-semibold text-2xl">{post.title}</h3>
-                  )}
-                  <p>{post.content || ""}</p>
-                  {/* attachment */}
-                  <div
-                    className={`grid gap-2 mt-4 grid-cols-${
-                      post?.attachments?.length > 3
-                        ? "3"
-                        : post?.attachments?.length
-                    }`}
-                  >
-                    {post?.attachments?.map((attachment, i) => (
-                      <img
-                        key={i}
-                        src={`${BACK_END}/attachment/${attachment.name}`}
-                        alt="Post"
-                        className="rounded-md w-full"
-                      />
-                    ))}
-                  </div>
-                  <div className="flex">
-                    <div className="flex">
-                      {post?.likes?.length > 0 && (
-                        <>
-                          <ThumbsUp
-                            strokeWidth={"2px"}
-                            fillOpacity={"15%"}
-                            fill="green"
-                            className="mr-2 p-0.5 h-5 w-5 text-white bg-lime-300 rounded-full"
-                          />{" "}
-                          {post?.likes?.length}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <Separator className="mt-4" />
-                  <div className="flex justify-between items-center mt-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (!user) {
-                          toast.error("Please login to like post");
-                          return;
-                        }
-
-                        PostService.likePost(post.post_id).then((data) => {
-                          console.log(data);
-                          setPosts((prev) =>
-                            prev.map((p) =>
-                              p.post_id === post.post_id ? data : p
-                            )
-                          );
-                        });
-                      }}
-                    >
-                      <ThumbsUp
-                        strokeWidth={"1px"}
-                        className="mr-2 h-4 w-4"
-                        fill={`${
-                          post?.likes?.filter(
-                            (like) => like.userId === user?.userId
-                          ).length > 0
-                            ? "green"
-                            : "none"
-                        }`}
-                        fillOpacity={"45%"}
-                      />
-                      Like
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <MessageCircle className="mr-2 h-4 w-4" /> Comment
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Share2 className="mr-2 h-4 w-4" /> Share
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <PostCard
+                key={post.post_id}
+                i={i}
+                post={post}
+                setPosts={setPosts}
+                user={user}
+              ></PostCard>
             ))}
           </section>
 
@@ -355,7 +240,7 @@ export default function HomeScreen() {
                 {friendReqs?.map((fr) => (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <Avatar>
+                      <Avatar onClick={() => nav("/profile/" + fr.userId)}>
                         <AvatarImage
                           src={`${BACK_END}/attachment/${fr.avatar}`}
                         />
@@ -402,7 +287,7 @@ export default function HomeScreen() {
             </Card>
 
             {/* Suggested Friends */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <h2 className="text-lg font-semibold">People You May Know</h2>
               </CardHeader>
@@ -425,7 +310,7 @@ export default function HomeScreen() {
                   <Button size="sm">Add Friend</Button>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </aside>
         </main>
       </div>

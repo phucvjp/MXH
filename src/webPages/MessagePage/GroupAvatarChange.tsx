@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,45 +11,46 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { BACK_END } from "@/constant/domain";
-import UserService from "@/service/UserService";
+import GroupService from "@/service/GroupService";
 import { CameraIcon } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-export const BGChange = ({ ...props }) => {
-  const [BGPreview, setBGPreview] = useState<string | null>(props.bGPreview);
+export const GroupAvatarChange = ({ ...props }) => {
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    props.avatarPreview
+  );
   const [image, setImage] = useState<File | null>(null);
 
   useEffect(() => {
-    setBGPreview(props.bGPreview);
-  }, [props.bGPreview]);
+    setAvatarPreview(props.avatarPreview);
+  }, [props.avatarPreview]);
 
-  const uploadBG = async () => {
+  const uploadAvatar = async () => {
     if (!image) {
       toast.error("Please select an image to upload");
       return;
     }
-    UserService.uploadBG(image)
+    GroupService.uploadAvatar(image, props.group?.groupId)
       .then((res) => {
         if (res) {
-          toast.success("Background uploaded successfully");
-          console.log(res);
-          props.setBGPreview(`${BACK_END}/attachment/${res?.name}`);
-          setBGPreview(`${BACK_END}/attachment/${res?.name}`);
+          toast.success("Avatar uploaded successfully");
+          props.setAvatarPreview(`${BACK_END}/attachment/${res?.name}`);
+          setAvatarPreview(`${BACK_END}/attachment/${res?.name}`);
         }
       })
       .catch(() => {
-        toast.error("Failed to upload bG");
+        toast.error("Failed to upload avatar");
       });
   };
-  const handleBGChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setImage(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setBGPreview(e.target.result as string);
+          setAvatarPreview(e.target.result as string);
         }
       };
       reader.readAsDataURL(file);
@@ -57,14 +59,17 @@ export const BGChange = ({ ...props }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="absolute bg-black bg-opacity-50 w-fit bottom-4 right-4">
-          <CameraIcon className="w-6 h-6 mr-1 text-white" />
-          Change Background
-        </Button>
+        <Avatar className="sm:h-24 sm:w-24 md:h-32 md:w-32 border-4 border-white hover:cursor-pointer">
+          <div className="absolute inset-0 bg-black translate-y-3/4 bg-opacity-50 ">
+            <CameraIcon className="w-6 h-6 m-auto text-white" />
+          </div>
+          <AvatarImage src={props.avatarPreview || ""} alt="avatar" />
+          <AvatarFallback>{props.group?.name}</AvatarFallback>
+        </Avatar>
       </DialogTrigger>
-      <DialogContent className="w-full">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit BG</DialogTitle>
+          <DialogTitle>Edit Group Avatar</DialogTitle>
           <DialogDescription>
             Make changes to your profile here. Click save when you're done.
           </DialogDescription>
@@ -72,29 +77,26 @@ export const BGChange = ({ ...props }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            uploadBG();
+            uploadAvatar();
           }}
         >
           <div className="grid gap-4 py-4">
             <div className="flex items-center justify-center">
-              <div className=" rounded-lg border-white hover:cursor-pointer relative overflow-hidden">
+              <Avatar className="w-40 h-40 border-4 border-white hover:cursor-pointer">
                 <div className="absolute inset-0 bg-black translate-y-3/4 bg-opacity-50 ">
                   <CameraIcon className="w-6 h-6 m-auto text-white" />
                 </div>
-                <img
-                  src={BGPreview || props.bGPreview}
-                  alt="Cover"
-                  className="w-full object-contain rounded-lg aspect-[5/1] bg-current"
-                />
+                <AvatarImage src={avatarPreview || ""} alt="avatar" />
+                <AvatarFallback>{props.group?.name}</AvatarFallback>
                 <Input
-                  id="bG"
+                  id="avatar"
                   type="file"
                   accept="image/*"
-                  onChange={handleBGChange}
+                  onChange={handleAvatarChange}
                   required
                   className="absolute opacity-0 w-full h-full top-0 left-0 cursor-pointer"
                 />
-              </div>
+              </Avatar>
             </div>
           </div>
           <DialogFooter>

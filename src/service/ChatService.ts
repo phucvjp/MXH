@@ -1,7 +1,7 @@
-import { BACK_END } from '@/constant/domain';
-import axios, { AxiosResponse } from 'axios';
-import { User } from './UserService';
-import { Attachment } from './AttachmentService';
+import { BACK_END, NG_HEADER } from "@/constant/domain";
+import axios, { AxiosResponse } from "axios";
+import { User } from "./UserService";
+import { Attachment } from "./AttachmentService";
 
 export interface MessageModel {
   senderId: number;
@@ -21,14 +21,20 @@ export interface Message {
 }
 
 class ChatService {
-  private baseUrl: string = BACK_END+ '/messages';
+  private baseUrl: string = BACK_END + "/messages";
 
   public async getMessages(groupId: number, pageable: any): Promise<any> {
     try {
-      const response: AxiosResponse<any> = await axios.get(`${this.baseUrl}/${groupId}`, { params: pageable });
+      const response: AxiosResponse<any> = await axios.get(
+        `${this.baseUrl}/${groupId}`,
+        {
+          params: pageable,
+          headers: { ...NG_HEADER },
+        }
+      );
       return response.data;
     } catch (error) {
-      throw new Error('Failed to fetch messages');
+      throw new Error("Failed to fetch messages");
     }
   }
 

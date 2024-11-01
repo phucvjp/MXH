@@ -10,13 +10,10 @@ import {
   Phone,
   Video,
   Info,
-  Plus,
   Image,
   Crown,
   LogOut,
   LogOutIcon,
-  Bell,
-  Menu,
   Star,
 } from "lucide-react";
 import { Client, IMessage } from "@stomp/stompjs";
@@ -26,8 +23,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import UserService, { User } from "@/service/UserService";
 import { useForm } from "react-hook-form";
 import GroupService, { Group } from "@/service/GroupService";
-import { BACK_END, BE_IP } from "@/constant/domain";
-import { getCookie, removeCookie, setCookie } from "typescript-cookie";
+import { BACK_END, WS_BACK_END } from "@/constant/domain";
+import { getCookie } from "typescript-cookie";
 import ChatService, { Message } from "@/service/ChatService";
 import { AddUser } from "./addUser";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,22 +41,18 @@ interface ClientProps {
   client: Client;
   group: Group;
 }
-import { number, z } from "zod";
+import { z } from "zod";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import AttachmentService from "@/service/AttachmentService";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setCurrentGroup, setGroups } from "@/redux/reducers/Group";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DateUtil } from "@/service/DateUtil";
 import { ConfirmChat } from "./confirmChat";
-import { set } from "date-fns";
+import { MessageComponent } from "./MessageComponent";
+import { CreateGroup } from "./createGroup";
+import { GroupAvatarChange } from "./GroupAvatarChange";
+import { GroupNameChange } from "./GroupNameChange";
 const formSchema = z.object({
   token: z.string(),
   content: z.string(),
@@ -86,6 +79,8 @@ export function MessagesScreen() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const location = useLocation();
   const [tempChat, setTempChat] = useState<Group | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const { isLoading, isPending, isError, data, error } = useQuery({
     queryKey: ["groups"],
@@ -112,6 +107,20 @@ export function MessagesScreen() {
       nav(location.pathname, { replace: true, state: {} });
     }
   }, [location, nav]);
+
+  useEffect(() => {
+    setAvatarPreview(
+      currentGroup?.avatar
+        ? `${BACK_END}/attachment/${currentGroupRef.current?.avatar?.name}`
+        : currentGroupRef.current?.type === "GROUP"
+        ? `/placeholder-avatar-${currentGroupRef.current?.avatar?.name}.png`
+        : `${BACK_END}/attachment/${
+            currentGroupRef.current?.users?.filter((user1) => {
+              return user1.userId !== user?.userId;
+            })[0]?.avatar || ""
+          }`
+    );
+  }, [currentGroupRef.current]);
 
   useEffect(() => {
     console.log("new message", isNewMess);
@@ -240,7 +249,7 @@ export function MessagesScreen() {
           continue;
         }
         const newClient = new Client({
-          brokerURL: `ws://${BE_IP}:8080/message`,
+          brokerURL: `${WS_BACK_END}/message`,
           onConnect: () => {
             newClient.subscribe(
               "/topic/public/" + currentGroup?.groupId,
@@ -296,7 +305,7 @@ export function MessagesScreen() {
       if (clients != null) {
         clients.forEach((client) => {
           if (client.client.connected) {
-            console.log("deactivating client:-274" + client.group.groupId);
+            console.log("deactivating client:" + client.group.groupId);
             client.client.deactivate();
             // client.client.unsubscribe("/topic/public/" + client.group.groupId); // unsubscribe from the topic\
             // client.client.forceDisconnect();
@@ -348,9 +357,9 @@ export function MessagesScreen() {
             users:
               message?.status == "ANNOUNCE" &&
               currentGroupRef.current?.users?.filter((u) => {
-                return u.userId != message.user.userId;
+                return u.userId === message.user.userId;
               }).length === 0
-                ? [...currentGroupRef.current.users, message.user]
+                ? [...currentGroupRef.current?.users, message.user]
                 : [...(currentGroupRef.current?.users || [])],
             messages: [
               ...(currentGroupRef.current?.messages || []),
@@ -368,14 +377,13 @@ export function MessagesScreen() {
                 users:
                   message?.status == "ANNOUNCE" &&
                   group?.users?.filter((u) => {
-                    return u.userId != message.user.userId;
+                    return u.userId === message.user.userId;
                   }).length === 0
-                    ? [...group.users]
-                    : [...group.users, message.user],
+                    ? [...group.users, message.user]
+                    : [...group.users],
                 messages: [...(group.messages || []), newMessage],
               };
             }
-
             return group;
           })
         )
@@ -426,16 +434,10 @@ export function MessagesScreen() {
         form.reset();
         form.setValue("files", []);
       }
-
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
       form.reset();
     }
-  };
-
-  const handleCreateGroup = () => {
-    GroupService.createGroup(`${groups?.length || 0}`).then((group) => {
-      dispatch(setGroups([group, ...groups]));
-      setAddNewGroup((prev) => !prev);
-    });
   };
 
   const handleChangeGroup = (group: Group) => {
@@ -470,7 +472,7 @@ export function MessagesScreen() {
     setMaxPage(2);
   };
 
-  const handleLoadMessages = (e?: any) => {
+  const handleLoadMessages = () => {
     if (
       messagePage >= maxPage ||
       currentGroupRef.current?.numberOfMessages ==
@@ -486,14 +488,40 @@ export function MessagesScreen() {
     }).then((res) => {
       console.log(res);
       setMaxPage(res.totalPages);
+      let temp = res.content;
+      let newMsgs: Message[] = [];
+      if (currentGroupRef.current?.messages) {
+        newMsgs = [...currentGroupRef.current?.messages];
+      } else {
+        newMsgs = [];
+      }
+      temp.forEach((msg: Message) => {
+        if (
+          currentGroupRef.current?.messages.filter((message) => {
+            return message.messageId === msg.messageId;
+          }).length === 0
+        ) {
+          newMsgs = [
+            {
+              messageId: msg.messageId,
+              content: msg.content,
+              sendAt: msg.sendAt,
+              updateAt: msg.updateAt,
+              user: msg.user,
+              status: msg.status,
+              attachments: msg.attachments,
+              groupId: msg.groupId,
+            },
+            ...(newMsgs || []),
+          ];
+        }
+      });
+
       dispatch(
         setCurrentGroup({
           ...currentGroupRef.current,
           numberOfMessages: res.totalElements,
-          messages: [
-            ...res.content.reverse(),
-            ...(currentGroupRef.current?.messages || []),
-          ],
+          messages: [...newMsgs],
         })
       );
       setLoadMessage(false);
@@ -501,6 +529,7 @@ export function MessagesScreen() {
   };
 
   const handleViewPro = (userId: number) => {
+    if (userId === 0) return;
     nav(`/profile/${userId}`);
   };
 
@@ -521,7 +550,7 @@ export function MessagesScreen() {
       {" "}
       <div className="flex h-screen bg-gray-100">
         {/* Left Sidebar - Chat List */}
-        <div className="w-1/4 bg-white border-r flex flex-col justify-between">
+        <div className=" w-1/4 bg-white border-r flex flex-col justify-between">
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
               <div
@@ -531,17 +560,17 @@ export function MessagesScreen() {
                   nav("/");
                 }}
               >
-                <span className="hidden font-bold sm:inline-block">
+                <span className="font-bold inline-block">
                   <Star className="h-6 w-6" strokeWidth={"1px"} fill="yellow" />
                 </span>
               </div>
               <h2 className="text-xl font-bold">Chats</h2>
-              <Button
-                className="border-collapse rounded-full"
-                onClick={handleCreateGroup}
-              >
-                <Plus className="w-3/4" />
-              </Button>
+              <CreateGroup
+                dispatch={dispatch}
+                setGroups={setGroups}
+                groups={groups}
+                setAddNewGroup={setAddNewGroup}
+              />
             </div>
 
             <div className="relative mb-4">
@@ -567,14 +596,24 @@ export function MessagesScreen() {
                         handleChangeGroup(group);
                       }}
                     >
-                      <Avatar className="h-12 w-12">
+                      <Avatar
+                        className="h-12 w-12"
+                        onClick={() => {
+                          group.type !== "GROUP" &&
+                            handleViewPro(
+                              group.users?.filter((user1) => {
+                                return user1.userId !== user?.userId;
+                              })[0].userId || 0
+                            );
+                        }}
+                      >
                         <AvatarImage
                           src={
                             group?.avatar
-                              ? `http://${BE_IP}:8080/attachment/${group?.avatar}`
+                              ? `${BACK_END}/attachment/${group?.avatar.name}`
                               : group.type === "GROUP"
                               ? `/placeholder-avatar-${group.groupId}.png`
-                              : `http://${BE_IP}:8080/attachment/${
+                              : `${BACK_END}/attachment/${
                                   group.users?.filter((user1) => {
                                     return user1.userId !== user?.userId;
                                   })[0]?.avatar || ""
@@ -636,10 +675,7 @@ export function MessagesScreen() {
           <Button
             className="mx-1 my-1"
             onClick={() => {
-              localStorage.removeItem("token");
-              removeCookie("user");
-              setCookie("user", "", { expires: -1 });
-              nav("/login");
+              UserService.logout();
             }}
           >
             <LogOut className="h-5 w-5 mr-2" />
@@ -651,19 +687,19 @@ export function MessagesScreen() {
         <div className="flex-1 flex flex-col w-1/2 ">
           <div className="bg-white p-4 flex items-center justify-between border-b">
             <div className="flex items-center">
-              <Avatar className="h-12 w-12">
+              <Avatar
+                className="h-12 w-12"
+                onClick={() => {
+                  currentGroupRef.current?.type !== "GROUP" &&
+                    handleViewPro(
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0].userId || 0
+                    );
+                }}
+              >
                 <AvatarImage
-                  src={
-                    currentGroupRef.current?.avatar
-                      ? `http://${BE_IP}:8080/attachment/${currentGroupRef.current?.avatar}`
-                      : currentGroupRef.current?.type === "GROUP"
-                      ? `/placeholder-avatar-${currentGroupRef.current?.avatar}.png`
-                      : `http://${BE_IP}:8080/attachment/${
-                          currentGroupRef.current?.users?.filter((user1) => {
-                            return user1.userId !== user?.userId;
-                          })[0]?.avatar || ""
-                        }`
-                  }
+                  src={avatarPreview}
                   alt={
                     currentGroupRef.current?.type === "GROUP"
                       ? currentGroupRef.current?.name
@@ -708,7 +744,7 @@ export function MessagesScreen() {
             className="flex-1 p-4"
             ref={scrollAreaRef}
             onScrollCapture={(e) => {
-              if (e.target.scrollTop === 0) {
+              if ((e.target as HTMLDivElement).scrollTop === 0) {
                 console.log("fetching more messages");
                 handleLoadMessages();
               }
@@ -717,111 +753,14 @@ export function MessagesScreen() {
             <div className="h-24" hidden={!loadMessage}>
               <LoadingAnimation className="h-auto relative p-4" />
             </div>
-            {currentGroup?.messages?.map((msg, index) => {
-              if (msg?.status === "MESSAGE")
-                return (
-                  <>
-                    <div
-                      key={index}
-                      className={`flex mb-4 items-start  ${
-                        msg?.user?.userId === user?.userId
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      {msg.user.userId === user?.userId ? null : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Avatar
-                                onClick={() => {
-                                  handleViewPro(msg.user.userId);
-                                }}
-                                className="h-8 w-8 mr-2 hover:cursor-pointer"
-                              >
-                                {!msg?.user?.avatar ? null : (
-                                  <AvatarImage
-                                    src={`http://${BE_IP}:8080/attachment/${msg?.user?.avatar}`}
-                                    alt={msg?.user?.firstName}
-                                  />
-                                )}
-
-                                <AvatarFallback className="bg-white">
-                                  {(msg?.user?.firstName || "")
-                                    .slice(0, 1)
-                                    .toUpperCase() +
-                                    (msg?.user?.lastName || "")
-                                      .slice(0, 1)
-                                      .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {(msg?.user?.firstName || "") +
-                                  " " +
-                                  (msg?.user?.lastName || "")}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      <div
-                        className={`max-w-[65%] rounded-2xl  ${
-                          msg?.user?.userId === user?.userId
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200"
-                        }`}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger className="w-full hover:cursor-default p-2">
-                              <p className="break-words text-left ">
-                                {msg?.content}
-                              </p>
-                              <div className="flex items-center flex-wrap justify-center w-fit">
-                                {msg?.attachments?.map((attachment, index) => (
-                                  <div key={index} className="flex m-1">
-                                    <LazyLoadImage
-                                      src={`http://${BE_IP}:8080/attachment/${attachment.name}`}
-                                      alt={`${attachment.name}`}
-                                      className="h-28 w-28 object-cover rounded-lg hover:cursor-pointer"
-                                      loading="lazy"
-                                      onClick={() => {
-                                        window.open(
-                                          `http://${BE_IP}:8080/attachment/${attachment.name}`
-                                        );
-                                      }}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {new DateUtil(msg.updateAt).formatMessageTime()}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  </>
-                );
-              if (msg?.status === "ANNOUNCE")
-                return (
-                  <>
-                    <div className="flex justify-center mb-4">
-                      <p>{new DateUtil(msg.updateAt).formatMessageTime()}</p>
-                    </div>
-                    <div className="flex justify-center mb-4">
-                      <div className="p-2 bg-gray-300 rounded-lg max-w-fit">
-                        <p>{msg?.content}</p>
-                      </div>
-                    </div>
-                  </>
-                );
-            })}
+            {currentGroup?.messages?.map((msg, index) => (
+              <MessageComponent
+                key={index}
+                msg={msg}
+                user={user}
+                handleViewPro={handleViewPro}
+              ></MessageComponent>
+            ))}
           </ScrollArea>
           <div className="bg-white p-4 border-t ">
             <div className="flex items-center">
@@ -842,7 +781,13 @@ export function MessagesScreen() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            submited={submited}
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex items-center">
@@ -881,12 +826,71 @@ export function MessagesScreen() {
         </div>
 
         {/* Right Sidebar - Chat Info */}
-        <ScrollArea className="w-1/4 bg-white border-l p-4">
+        <ScrollArea className="hidden w-1/4 bg-white border-l p-4 sm:block">
           <h2 className="text-xl font-bold mb-4">Chat Info</h2>
           <div className="mb-4">
-            <div>
-              <h3 className="font-semibold mb-2">Shared Files</h3>
-              <p className="text-sm text-gray-500">No files shared yet</p>
+            <div className="h-fit flex items-center justify-center">
+              {currentGroupRef.current?.type === "GROUP" ? (
+                <GroupAvatarChange
+                  avatarPreview={avatarPreview}
+                  group={currentGroupRef.current}
+                  setAvatarPreview={setAvatarPreview}
+                />
+              ) : (
+                <Avatar
+                  className="sm:h-24 sm:w-24 md:h-32 md:w-32 border-4 border-white hover:cursor-pointer"
+                  onClick={() => {
+                    currentGroupRef.current?.type !== "GROUP" &&
+                      handleViewPro(
+                        currentGroupRef.current?.users?.filter((user1) => {
+                          return user1.userId !== user?.userId;
+                        })[0].userId || 0
+                      );
+                  }}
+                >
+                  <AvatarImage
+                    src={avatarPreview}
+                    alt={
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0]?.firstName
+                    }
+                  />
+                  <AvatarFallback>
+                    {
+                      currentGroupRef.current?.users?.filter((user1) => {
+                        return user1.userId !== user?.userId;
+                      })[0]?.firstName
+                    }
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+            <div className="flex items-center justify-center">
+              {currentGroupRef.current?.type === "GROUP" ? (
+                <>
+                  <h2 className="text-xl font-semibold">
+                    {currentGroupRef.current?.name}
+                  </h2>
+                  <GroupNameChange
+                    group={currentGroupRef.current}
+                    dispatch={dispatch}
+                    setGroups={setGroups}
+                    setCurrentGroup={setCurrentGroup}
+                    groups={groups}
+                  />
+                </>
+              ) : (
+                <h2 className="text-xl font-semibold">
+                  {currentGroupRef.current?.users?.filter((user1) => {
+                    return user1.userId !== user?.userId;
+                  })[0]?.firstName +
+                    " " +
+                    currentGroupRef.current?.users?.filter((user1) => {
+                      return user1.userId !== user?.userId;
+                    })[0]?.lastName}
+                </h2>
+              )}
             </div>
             {currentGroupRef.current?.type === "GROUP" && (
               <>
@@ -921,7 +925,11 @@ export function MessagesScreen() {
                           (member?.lastName || "").slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                       <AvatarImage
-                        src={`http://${BE_IP}:8080/attachment/${member?.avatar}`}
+                        src={
+                          member?.avatar
+                            ? `${BACK_END}/attachment/${member?.avatar}`
+                            : ""
+                        }
                         alt={member?.firstName}
                       />
                     </Avatar>
@@ -950,14 +958,16 @@ export function MessagesScreen() {
                     return (
                       <div key={index} className="flex m-1">
                         <LazyLoadImage
-                          src={`http://${BE_IP}:8080/attachment/${attachment}`}
+                          src={
+                            attachment
+                              ? `${BACK_END}/attachment/${attachment}`
+                              : ""
+                          }
                           alt={`${attachment}`}
                           className="h-16 w-16 object-cover rounded-lg hover:cursor-pointer fle"
                           loading="lazy"
                           onClick={() => {
-                            window.open(
-                              `http://${BE_IP}:8080/attachment/${attachment}`
-                            );
+                            window.open(`${BACK_END}/attachment/${attachment}`);
                           }}
                         />
                       </div>

@@ -1,34 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BACK_END } from "@/constant/domain";
 import GroupService from "@/service/GroupService";
 import UserService, { User } from "@/service/UserService";
-import {
-  MessageCircle,
-  ThumbsUp,
-  Share2,
-  UserPlus,
-  MoreHorizontal,
-  Paperclip,
-  CameraIcon,
-  Loader2,
-} from "lucide-react";
-import { ChangeEvent, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { MessageCircle, UserPlus, Paperclip, UserMinus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getCookie } from "typescript-cookie";
 import PostService, { Post } from "@/service/PostService";
 import { useQuery } from "@tanstack/react-query";
 import LoadingAnimation from "@/components/ui/loadingAnimation/LoadingAnimation";
-import { DateUtil } from "@/service/DateUtil";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,11 +25,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DropzoneComponent from "@/components/ui/DropZoneComponent";
 import { Input } from "@/components/ui/input";
-import { set } from "date-fns";
-import { Separator } from "@/components/ui/separator";
 import { AvatarChange } from "./AvatarChange";
 import { BGChange } from "./BGChange";
 import { toast } from "react-toastify";
+import { PostCard } from "../PostPage/PostCard";
 
 const formSchema = z.object({
   title: z.string(),
@@ -65,6 +47,8 @@ export default function UserProfile() {
   const [openAddImages, setOpenAddImages] = useState<boolean>(true);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [bGPreview, setBGPreview] = useState<string>();
+  const tab = useLocation().state?.tab;
+  const [submited, setSubmited] = useState<boolean>(false);
 
   const nav = useNavigate();
 
@@ -79,6 +63,7 @@ export default function UserProfile() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: "",
       content: "",
       files: [],
     },
@@ -87,7 +72,6 @@ export default function UserProfile() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token && token !== "" && token !== "undefined") {
-      console.log(profileId);
       setUser(JSON.parse(getCookie("user") ?? "{}"));
       scrollTo({
         top: 0,
@@ -117,7 +101,7 @@ export default function UserProfile() {
     PostService.getPostsByUser(parseInt(profileId || "-1")).then((data) =>
       setPosts(data)
     );
-  }, [data]);
+  }, [data, profile]);
 
   if (isPending) {
     return <LoadingAnimation />;
@@ -147,6 +131,8 @@ export default function UserProfile() {
       console.log(response);
       setPosts((prev) => [response, ...prev]);
       form.reset();
+      setSubmited((prev) => !prev);
+      setOpenAddImages(true);
     });
   };
   return (
@@ -215,24 +201,62 @@ export default function UserProfile() {
             </h1>
             <p className="text-muted-foreground"></p>
           </div>
-          {user && user.userId !== profile?.userId && (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  UserService.addFriend(parseInt(profileId || "-1"));
-                }}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Friend
-              </Button>
-              <Button variant="outline" onClick={handleMessageReq}>
-                <MessageCircle className="mr-2 h-4 w-4" /> Message
-              </Button>
-              {/* <Button variant="outline">
+          {user &&
+            profile &&
+            user.userId !== profile?.userId &&
+            (!profile.friends?.includes(user?.userId) ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    UserService.addFriend(parseInt(profileId || "-1")).then(
+                      (data) => {
+                        if (data.friends?.includes(user?.userId)) {
+                          toast.success("Friend Added");
+                        } else {
+                          toast.success("Request Sent");
+                        }
+                        setProfile(data);
+                      }
+                    );
+                  }}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Friend
+                </Button>
+                <Button variant="outline" onClick={handleMessageReq}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Message
+                </Button>
+                {/* <Button variant="outline">
               <Settings className="h-4 w-4" />
             </Button> */}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    UserService.unfriend(parseInt(profileId || "-1")).then(
+                      (data) => {
+                        if (!data.friends?.includes(user?.userId)) {
+                          toast.success("Friend Removed");
+                        } else {
+                          toast.error("Failed to remove friend");
+                        }
+                        setProfile(data);
+                      }
+                    );
+                  }}
+                >
+                  <UserMinus className="mr-2 h-4 w-4" />
+                  Unfriend
+                </Button>
+                <Button variant="outline" onClick={handleMessageReq}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Message
+                </Button>
+                {/* <Button variant="outline">
+              <Settings className="h-4 w-4" />
+            </Button> */}
+              </div>
+            ))}
         </div>
       </div>
 
@@ -254,7 +278,7 @@ export default function UserProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Friends ({profile?.numberOfFriends || 0})</CardTitle>
+              <CardTitle>Friends ({profile?.friends?.length || 0})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-2">
@@ -268,7 +292,11 @@ export default function UserProfile() {
                         }}
                       >
                         <AvatarImage
-                          src={`${BACK_END}/attachment/${friend.avatar}`}
+                          src={
+                            friend.avatar
+                              ? `${BACK_END}/attachment/${friend.avatar}`
+                              : ""
+                          }
                         />
                         <AvatarFallback>
                           {friend.firstName || ""}
@@ -339,7 +367,13 @@ export default function UserProfile() {
                       <FormField
                         control={form.control}
                         name="files"
-                        render={({ field }) => <DropzoneComponent {...field} />}
+                        render={({ field }) => (
+                          <DropzoneComponent
+                            submited={submited}
+                            control={form.control}
+                            {...field}
+                          />
+                        )}
                       />
                     </ScrollArea>
                     <div className="flex justify-between">
@@ -357,122 +391,24 @@ export default function UserProfile() {
             </Card>
           )}
 
-          <Tabs defaultValue="posts">
+          <Tabs defaultValue={tab || "posts"}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="posts">Posts</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="friends">Friends</TabsTrigger>
             </TabsList>
-            <TabsContent value="posts">
-              {posts.map((post, i) => (
-                <Card key={i} className="mb-4">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={`${BACK_END}/attachment/${post.user?.avatar}`}
-                          />
-                          <AvatarFallback>{profile?.firstName}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold">
-                            {profile?.firstName + " " + profile?.lastName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new DateUtil(post.postDate).formatPostTime()}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {post.title && (
-                      <h3 className="font-semibold text-2xl">{post.title}</h3>
-                    )}
-                    <p>{post.content || ""}</p>
-                    {/* attachment */}
-                    <div
-                      className={`grid gap-2 mt-4 grid-cols-${
-                        post?.attachments?.length > 3
-                          ? "3"
-                          : post?.attachments?.length
-                      }`}
-                    >
-                      {post?.attachments?.map((attachment, i) => (
-                        <img
-                          key={i}
-                          src={`${BACK_END}/attachment/${attachment.name}`}
-                          alt="Post"
-                          className="rounded-md w-full"
-                        />
-                      ))}
-                    </div>
-                    <div className="flex">
-                      <div className="flex">
-                        {post?.likes?.length > 0 && (
-                          <>
-                            <ThumbsUp
-                              strokeWidth={"2px"}
-                              fillOpacity={"15%"}
-                              fill="green"
-                              className="mr-2 p-0.5 h-5 w-5 text-white bg-lime-300 rounded-full"
-                            />{" "}
-                            {post?.likes?.length}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <Separator className="mt-4" />
-                    <div className="flex justify-between items-center mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (!user) {
-                            toast.error("Please login to like post");
-                            return;
-                          }
-
-                          PostService.likePost(post.post_id).then((data) => {
-                            console.log(data);
-                            setPosts((prev) =>
-                              prev.map((p) =>
-                                p.post_id === post.post_id ? data : p
-                              )
-                            );
-                          });
-                        }}
-                      >
-                        <ThumbsUp
-                          strokeWidth={"1px"}
-                          className="mr-2 h-4 w-4"
-                          fill={`${
-                            post.likes.filter(
-                              (like) => like.userId === user?.userId
-                            ).length > 0
-                              ? "green"
-                              : "none"
-                          }`}
-                          fillOpacity={"45%"}
-                        />
-                        Like
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MessageCircle className="mr-2 h-4 w-4" /> Comment
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Share2 className="mr-2 h-4 w-4" /> Share
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+            <TabsContent value="posts" id="posts">
+              {posts?.map((post, i) => (
+                <PostCard
+                  key={post.post_id}
+                  i={i}
+                  post={post}
+                  setPosts={setPosts}
+                  user={user}
+                ></PostCard>
               ))}
             </TabsContent>
-            <TabsContent value="about">
+            <TabsContent value="about" id="about">
               <Card>
                 <CardContent className="space-y-4 mt-4">
                   <h3 className="text-lg font-semibold">Work and Education</h3>
@@ -489,15 +425,24 @@ export default function UserProfile() {
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="friends">
+            <TabsContent value="friends" id="friends">
               <Card>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
                     {friends?.map((friend, i) => (
                       <div key={i} className="text-center">
-                        <Avatar className="mx-auto mb-2 h-20 w-20">
+                        <Avatar
+                          className="mx-auto mb-2 h-20 w-20"
+                          onClick={() => {
+                            nav(`/profile/${friend.userId}`);
+                          }}
+                        >
                           <AvatarImage
-                            src={`${BACK_END}/attachment/${friend.avatar}`}
+                            src={
+                              friend.avatar
+                                ? `${BACK_END}/attachment/${friend.avatar}`
+                                : ""
+                            }
                           />
                           <AvatarFallback>{friend.firstName}</AvatarFallback>
                         </Avatar>
@@ -507,21 +452,35 @@ export default function UserProfile() {
                         {/* <p className="text-sm text-muted-foreground">
                           100 mutual friends
                         </p> */}
-                        <Button
-                          className="mt-2"
-                          size="sm"
-                          onClick={() => {
-                            UserService.addFriend(friend.userId);
-                          }}
-                        >
-                          Add Friend
-                        </Button>
+                        {!user?.friends.includes(friend.userId) ? (
+                          user?.userId !== friend.userId && (
+                            <Button
+                              className="mt-2"
+                              size="sm"
+                              onClick={() => {
+                                UserService.addFriend(friend.userId);
+                              }}
+                            >
+                              Add Friend
+                            </Button>
+                          )
+                        ) : (
+                          <Button
+                            className="mt-2"
+                            size="sm"
+                            onClick={() => {
+                              UserService.unfriend(friend.userId);
+                            }}
+                          >
+                            Remove Friend
+                          </Button>
+                        )}
                       </div>
                     ))}
                     <Button
                       className="col-span-full"
                       onClick={() => {
-                        if (friendPage >= maxPage-1) {
+                        if (friendPage >= maxPage - 1) {
                           toast.error("No more friends to show");
                           return;
                         }

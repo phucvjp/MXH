@@ -14,8 +14,6 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import UserService from "@/service/UserService";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { toast } from "react-toastify";
-import { set } from "date-fns";
 import { setCookie } from "typescript-cookie";
 
 export default function Login() {
