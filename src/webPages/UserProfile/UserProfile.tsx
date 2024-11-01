@@ -452,15 +452,29 @@ export default function UserProfile() {
                         {/* <p className="text-sm text-muted-foreground">
                           100 mutual friends
                         </p> */}
-                        <Button
-                          className="mt-2"
-                          size="sm"
-                          onClick={() => {
-                            UserService.addFriend(friend.userId);
-                          }}
-                        >
-                          Add Friend
-                        </Button>
+                        {!user?.friends.includes(friend.userId) ? (
+                          user?.userId !== friend.userId && (
+                            <Button
+                              className="mt-2"
+                              size="sm"
+                              onClick={() => {
+                                UserService.addFriend(friend.userId);
+                              }}
+                            >
+                              Add Friend
+                            </Button>
+                          )
+                        ) : (
+                          <Button
+                            className="mt-2"
+                            size="sm"
+                            onClick={() => {
+                              UserService.unfriend(friend.userId);
+                            }}
+                          >
+                            Remove Friend
+                          </Button>
+                        )}
                       </div>
                     ))}
                     <Button
