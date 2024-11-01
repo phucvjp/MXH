@@ -440,7 +440,6 @@ export function MessagesScreen() {
     }
   };
 
-
   const handleChangeGroup = (group: Group) => {
     // dispatch(
     //   setGroups(
@@ -610,9 +609,7 @@ export function MessagesScreen() {
                       >
                         <AvatarImage
                           src={
-                            group.groupId == currentGroup?.groupId
-                              ? avatarPreview
-                              : group?.avatar
+                            group?.avatar
                               ? `${BACK_END}/attachment/${group?.avatar.name}`
                               : group.type === "GROUP"
                               ? `/placeholder-avatar-${group.groupId}.png`

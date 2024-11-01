@@ -39,7 +39,7 @@ class UserService {
         .then((response) => {
           setCookie("user", JSON.stringify(response.data.user), { expires: 1 });
           localStorage.setItem("token", response.data.token);
-          window.location.href = "/messages";
+          window.location.href = "/";
           toast.success("Register successfully");
           return response;
         });
